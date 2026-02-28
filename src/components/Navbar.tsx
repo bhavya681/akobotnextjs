@@ -61,12 +61,12 @@ const Navbar = () => {
       path: "/dashboard/tools-old/image",
       description: "Create stunning images"
     },
-    { 
-      name: "Video Generation", 
-      icon: Video, 
-      path: "/dashboard/tools-old/video",
-      description: "Generate videos with AI"
-    },
+    // { 
+    //   name: "Video Generation", 
+    //   icon: Video, 
+    //   path: "/dashboard/tools-old/video",
+    //   description: "Generate videos with AI"
+    // },
     { 
       name: "Custom Agent", 
       icon: Sparkles, 
@@ -210,7 +210,8 @@ const Navbar = () => {
                     <AnimatePresence mode="wait">
                       <motion.img 
                         key={theme}
-                        src={theme === "dark" ? "/ako_dark.png" : "/ako.png"} 
+                        // src={theme === "dark" ? "/ako_dark.png" : "/ako.png"} 
+                        src={"/ako_dark.png"} 
                         alt="AKO.ai Logo" 
                         animate={{
                           opacity: 1,
@@ -218,9 +219,8 @@ const Navbar = () => {
                           x: (isExpanded || isOpen) ? 1 : 0,
                         }}
                         style={{
-                          filter: theme === "dark" 
-                            ? "drop-shadow(0 0 1px #fff) drop-shadow(0 0 5px rgba(255,255,255,0.8))" 
-                            : "drop-shadow(0 0 1px #000) drop-shadow(0 0 5px rgba(0,0,0,0.3))",
+                          filter: "drop-shadow(0 0 1px #fff) drop-shadow(0 0 5px rgba(255,255,255,0.8))" 
+                          
                         }}
                         className="absolute left-0 h-auto w-full max-w-[130px] origin-left object-contain" 
                       />
@@ -231,10 +231,12 @@ const Navbar = () => {
                 {/* Right Side - All Nav Links + CTA */}
                 <div className="hidden sm:flex items-center gap-2 md:gap-4 lg:gap-6">
                   {/* Models Dropdown */}
-                  <DropdownMenu onOpenChange={(open) => setIsExpanded(open)}>
+                  <DropdownMenu 
+                  // onOpenChange={(open) => setIsExpanded(open)}
+                    >
                     <DropdownMenuTrigger asChild>
                       <motion.button
-                        className="text-xs md:text-sm text-white hover:text-white/90 transition-colors duration-200 flex items-center gap-1.5 px-2 md:px-3 py-1.5 rounded-lg hover:bg-white/10"
+                        className="text-xs md:text-sm cursor-pointer text-white hover:text-white/90 transition-colors duration-200 flex items-center gap-1.5 px-2 md:px-3 py-1.5 rounded-lg hover:bg-white/10"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
@@ -263,10 +265,12 @@ const Navbar = () => {
                   </DropdownMenu>
 
                   {/* Features Dropdown */}
-                  <DropdownMenu onOpenChange={(open) => setIsExpanded(open)}>
+                  <DropdownMenu 
+                  // onOpenChange={(open) => setIsExpanded(open)}
+                  >
                     <DropdownMenuTrigger asChild>
                       <motion.button
-                        className="text-xs sm:text-sm text-white hover:text-white/90 transition-colors duration-200 flex items-center gap-1.5 px-2 sm:px-3 py-1 rounded-lg hover:bg-white/10"
+                        className="text-xs cursor-pointer sm:text-sm text-white hover:text-white/90 transition-colors duration-200 flex items-center gap-1.5 px-2 sm:px-3 py-1 rounded-lg hover:bg-white/10"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
@@ -299,7 +303,7 @@ const Navbar = () => {
                       <motion.button
                         key={link.name}
                         onClick={() => router.push(link.path!)}
-                        className="text-xs md:text-sm text-white hover:text-white/90 transition-colors duration-200 px-2 md:px-3 py-1.5 rounded-lg hover:bg-white/10"
+                        className="text-xs cursor-pointer md:text-sm text-white hover:text-white/90 transition-colors duration-200 px-2 md:px-3 py-1.5 rounded-lg hover:bg-white/10"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
@@ -309,7 +313,7 @@ const Navbar = () => {
                       <motion.a
                         key={link.name}
                         href={link.href}
-                        className="text-xs md:text-sm text-white hover:text-white/90 transition-colors duration-200 px-2 md:px-3 py-1.5 rounded-lg hover:bg-white/10"
+                        className="text-xs md:text-sm cursor-pointer text-white hover:text-white/90 transition-colors duration-200 px-2 md:px-3 py-1.5 rounded-lg hover:bg-white/10"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
@@ -326,7 +330,7 @@ const Navbar = () => {
                           onClick={toggleTheme}
                           whileHover={{ scale: 1.15, rotate: 5 }}
                           whileTap={{ scale: 0.85, rotate: -5 }}
-                          className="relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full text-white hover:text-white/90 hover:bg-white/10 transition-all"
+                          className="relative flex cursor-pointer items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full text-white hover:text-white/90 hover:bg-white/10 transition-all"
                           title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
                         >
                           {theme === "dark" ? (
@@ -369,7 +373,7 @@ const Navbar = () => {
                           variant="ghost"
                           size="sm"
                           onClick={() => router.push("/dashboard")}
-                          className="text-white hover:text-white/90 hover:bg-white/10 text-xs md:text-sm px-2 md:px-4"
+                          className="text-white cursor-pointer hover:text-white/90 hover:bg-white/10 text-xs md:text-sm px-2 md:px-4"
                         >
                           Dashboard
                         </Button>
@@ -377,7 +381,7 @@ const Navbar = () => {
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <motion.button
-                            className="flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                            className="flex cursor-pointer items-center gap-2 px-2 md:px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                           >
@@ -388,7 +392,7 @@ const Navbar = () => {
                             <ChevronDown className="w-3 h-3 hidden md:block text-white" />
                           </motion.button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56 backdrop-blur-xl bg-card dark:bg-card border border-border shadow-xl">
+                        <DropdownMenuContent align="end" className="cursor-pointer w-56 backdrop-blur-xl bg-card dark:bg-card border border-border shadow-xl">
                           <div className="px-2 py-1.5">
                             <p className="text-sm font-medium text-foreground">{user?.username || user?.email || user?.role || 'User'}</p>
                             <p className="text-xs text-muted-foreground truncate">{user?.email || `ID: ${user?.id?.slice(0, 8) || 'N/A'}...`}</p>
@@ -396,7 +400,7 @@ const Navbar = () => {
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => router.push("/dashboard/account")}
-                            className="cursor-pointer hover:bg-accent/50 dark:hover:bg-accent/50"
+                            className="cursor-pointer cursor-pointer hover:bg-accent/50 dark:hover:bg-accent/50"
                           >
                             <User className="w-4 h-4 mr-2" />
                             Account Settings

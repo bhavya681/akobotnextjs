@@ -2410,6 +2410,147 @@ export const paymentAPI = {
   },
 };
 
+// Gallery API
+export type GalleryContentType = "image" | "video" | "image_to_image" | "llm";
+
+export interface GalleryItem {
+  _id: string;
+  userId?: string;
+  contentType: GalleryContentType;
+  prompt?: string;
+  outputUrl?: string;
+  thumbnailUrl?: string;
+  modelId?: string;
+  modelName?: string;
+  rating?: number;
+  isPrivate?: boolean;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt?: string;
+  username?: string;
+  userAvatar?: string;
+}
+
+export interface GalleryPaginatedResponse {
+  items: GalleryItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface GalleryStats {
+  byContentType?: Record<string, number>;
+  totalItems?: number;
+  averageRating?: number;
+}
+
+export const galleryAPI = {
+  /**
+   * Get my gallery (authenticated user)
+   * GET /api/gallery/me
+   */
+  getMyGallery: async (params?: {
+    contentType?: GalleryContentType;
+    minRating?: number;
+    modelId?: string;
+    isPrivate?: boolean;
+    fromDate?: string;
+    toDate?: string;
+    sortBy?: "createdAt" | "rating";
+    sortOrder?: "asc" | "desc";
+    page?: number;
+    limit?: number;
+  }): Promise<GalleryPaginatedResponse> => {
+    const searchParams = new URLSearchParams();
+    if (params?.contentType) searchParams.set("contentType", params.contentType);
+    if (params?.minRating !== undefined) searchParams.set("minRating", String(params.minRating));
+    if (params?.modelId) searchParams.set("modelId", params.modelId);
+    if (params?.isPrivate !== undefined) searchParams.set("isPrivate", String(params.isPrivate));
+    if (params?.fromDate) searchParams.set("fromDate", params.fromDate);
+    if (params?.toDate) searchParams.set("toDate", params.toDate);
+    if (params?.sortBy) searchParams.set("sortBy", params.sortBy);
+    if (params?.sortOrder) searchParams.set("sortOrder", params.sortOrder);
+    if (params?.page !== undefined) searchParams.set("page", String(params.page));
+    if (params?.limit !== undefined) searchParams.set("limit", String(params.limit));
+
+    const query = searchParams.toString();
+    const endpoint = `/api/gallery/me${query ? `?${query}` : ""}`;
+    const response = await mainApiRequest(endpoint, { method: "GET" });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error((err as { message?: string }).message || `Failed to fetch gallery: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  /**
+   * Get my gallery statistics
+   * GET /api/gallery/me/stats
+   */
+  getMyStats: async (): Promise<GalleryStats> => {
+    const response = await mainApiRequest("/api/gallery/me/stats", { method: "GET" });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error((err as { message?: string }).message || `Failed to fetch stats: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  /**
+   * Browse public gallery (no auth needed)
+   * GET /api/gallery/public
+   */
+  getPublicGallery: async (params?: {
+    contentType?: GalleryContentType;
+    minRating?: number;
+    modelId?: string;
+    fromDate?: string;
+    toDate?: string;
+    sortBy?: "createdAt" | "rating";
+    sortOrder?: "asc" | "desc";
+    page?: number;
+    limit?: number;
+  }): Promise<GalleryPaginatedResponse> => {
+    const searchParams = new URLSearchParams();
+    if (params?.contentType) searchParams.set("contentType", params.contentType);
+    if (params?.minRating !== undefined) searchParams.set("minRating", String(params.minRating));
+    if (params?.modelId) searchParams.set("modelId", params.modelId);
+    if (params?.fromDate) searchParams.set("fromDate", params.fromDate);
+    if (params?.toDate) searchParams.set("toDate", params.toDate);
+    if (params?.sortBy) searchParams.set("sortBy", params.sortBy);
+    if (params?.sortOrder) searchParams.set("sortOrder", params.sortOrder);
+    if (params?.page !== undefined) searchParams.set("page", String(params.page));
+    if (params?.limit !== undefined) searchParams.set("limit", String(params.limit));
+
+    const query = searchParams.toString();
+    const endpoint = `/api/gallery/public${query ? `?${query}` : ""}`;
+    const response = await mainApiRequest(endpoint, { method: "GET" });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error((err as { message?: string }).message || `Failed to fetch public gallery: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  /**
+   * Get a single gallery item by ID
+   * GET /api/gallery/{id}
+   */
+  getById: async (id: string): Promise<GalleryItem> => {
+    const response = await mainApiRequest(`/api/gallery/${id}`, { method: "GET" });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error((err as { message?: string }).message || `Failed to fetch item: ${response.status}`);
+    }
+    return response.json();
+  },
+};
+
 // Provider API Base URL - Using Liquidata demo server
 // Provider API - For model listing and chat completions
 export const providerAPI = {

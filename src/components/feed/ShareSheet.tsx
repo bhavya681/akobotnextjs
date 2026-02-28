@@ -5,7 +5,7 @@ import { toast } from "sonner";
 interface ShareSheetProps {
   isOpen: boolean;
   onClose: () => void;
-  itemId: number;
+  itemId: number | string;
 }
 
 const shareOptions = [

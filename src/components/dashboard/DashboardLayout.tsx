@@ -44,7 +44,7 @@ const navItems = [
 const toolsSubItems = [
   { path: "/dashboard/tools-old/agent", icon: MessageSquare, label: "Agent LLM" },
   { path: "/dashboard/tools-old/image", icon: ImageIcon, label: "Image" },
-  { path: "/dashboard/tools-old/video", icon: Video, label: "Video" },
+  // { path: "/dashboard/tools-old/video", icon: Video, label: "Video" },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

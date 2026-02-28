@@ -10,10 +10,10 @@ interface ImageDetailModalProps {
   isOpen: boolean;
   item: FeedItem | null;
   onClose: () => void;
-  onLike: (id: number) => void;
-  onSave: (id: number) => void;
-  onShare: (id: number) => void;
-  onOpenComments: (id: number) => void;
+  onLike: (id: number | string) => void;
+  onSave: (id: number | string) => void;
+  onShare: (id: number | string) => void;
+  onOpenComments: (id: number | string) => void;
   onPrev?: () => void;
   onNext?: () => void;
   hasPrev?: boolean;

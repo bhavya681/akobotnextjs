@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Sparkles,
@@ -17,36 +17,39 @@ import {
   Share2,
   Grid3x3,
   List,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { toast } from "sonner";
 import ImageDetailModal from "@/components/feed/ImageDetailModal";
 import { FeedItem } from "@/components/feed/FeedCard";
+import { galleryAPI, authAPI } from "@/lib/api";
+import { galleryItemToFeedItem, galleryItemToAgentItem, type AgentItemFromGallery } from "@/lib/galleryUtils";
 
 const quickActions = [
   {
     icon: MessageSquare,
     label: "Chat Agent",
-    path: "/dashboard/tools",
+    path: "/dashboard/tools-old/agent",
     color: "from-blue-600 to-cyan-500",
   },
   {
     icon: Image,
     label: "Generate Image",
-    path: "/dashboard/tools/image",
+    path: "/dashboard/tools-old/image",
     color: "from-purple-600 to-pink-500",
   },
   {
-    icon: Video,
-    label: "Create Video",
-    path: "/dashboard/tools/video",
+    icon: Bot,
+    label: "Create Agent",
+    path: "/dashboard/agent-store",
     color: "from-orange-500 to-red-500",
   },
 ];
 
 interface AgentItem {
-  id: number;
+  id: number | string;
   name: string;
   description: string;
   avatar: string;
@@ -56,193 +59,7 @@ interface AgentItem {
   status: "active" | "inactive";
 }
 
-const staticImages: FeedItem[] = [
-  {
-    id: 1,
-    type: "image",
-    mediaUrl: "/feeds/image1.jpg",
-    prompt: "A futuristic cityscape at sunset with neon lights",
-    author: { username: "alexcreator", avatar: "", verified: true },
-    likes: 234,
-    comments: 12,
-    shares: 5,
-    saves: 18,
-    model: "Imagen 3",
-    createdAt: new Date(Date.now() - 86400000).toISOString(),
-    isLiked: false,
-    isSaved: false,
-    isFollowing: false,
-  },
-  {
-    id: 2,
-    type: "image",
-    mediaUrl: "/feeds/image2.jpg",
-    prompt: "Abstract art with vibrant colors",
-    author: { username: "alexcreator", avatar: "", verified: true },
-    likes: 189,
-    comments: 8,
-    shares: 3,
-    saves: 15,
-    model: "DALL-E 3",
-    createdAt: new Date(Date.now() - 172800000).toISOString(),
-    isLiked: true,
-    isSaved: true,
-    isFollowing: false,
-  },
-  {
-    id: 3,
-    type: "image",
-    mediaUrl: "/feeds/image3.png",
-    prompt: "Minimalist logo design for tech startup",
-    author: { username: "alexcreator", avatar: "", verified: true },
-    likes: 156,
-    comments: 6,
-    shares: 2,
-    saves: 22,
-    model: "Midjourney",
-    createdAt: new Date(Date.now() - 259200000).toISOString(),
-    isLiked: false,
-    isSaved: false,
-    isFollowing: false,
-  },
-  {
-    id: 4,
-    type: "image",
-    mediaUrl: "/feeds/image4.jpg",
-    prompt: "Portrait photography with dramatic lighting",
-    author: { username: "alexcreator", avatar: "", verified: true },
-    likes: 312,
-    comments: 15,
-    shares: 7,
-    saves: 28,
-    model: "Stable Diffusion XL",
-    createdAt: new Date(Date.now() - 345600000).toISOString(),
-    isLiked: true,
-    isSaved: false,
-    isFollowing: false,
-  },
-  {
-    id: 5,
-    type: "image",
-    mediaUrl: "/feeds/image5.jpg",
-    prompt: "3D render of a modern office space",
-    author: { username: "alexcreator", avatar: "", verified: true },
-    likes: 278,
-    comments: 10,
-    shares: 4,
-    saves: 19,
-    model: "Imagen 3",
-    createdAt: new Date(Date.now() - 432000000).toISOString(),
-    isLiked: false,
-    isSaved: true,
-    isFollowing: false,
-  },
-  {
-    id: 6,
-    type: "image",
-    mediaUrl: "/feeds/image6.jpg",
-    prompt: "Fantasy landscape with mountains and waterfalls",
-    author: { username: "alexcreator", avatar: "", verified: true },
-    likes: 445,
-    comments: 22,
-    shares: 9,
-    saves: 35,
-    model: "DALL-E 3",
-    createdAt: new Date(Date.now() - 518400000).toISOString(),
-    isLiked: true,
-    isSaved: true,
-    isFollowing: false,
-  },
-];
-
-const staticVideos: FeedItem[] = [
-  {
-    id: 11,
-    type: "video",
-    mediaUrl: "/feeds/video1.mp4",
-    thumbnailUrl: "/feeds/image7.jpg",
-    prompt: "Time-lapse of a bustling city street",
-    author: { username: "alexcreator", avatar: "", verified: true },
-    likes: 567,
-    comments: 28,
-    shares: 12,
-    saves: 42,
-    model: "VideoFusion",
-    createdAt: new Date(Date.now() - 86400000).toISOString(),
-    isLiked: true,
-    isSaved: false,
-    isFollowing: false,
-  },
-  {
-    id: 12,
-    type: "video",
-    mediaUrl: "/feeds/video2.mp4",
-    thumbnailUrl: "/feeds/image8.jpg",
-    prompt: "Animated logo reveal with particle effects",
-    author: { username: "alexcreator", avatar: "", verified: true },
-    likes: 389,
-    comments: 15,
-    shares: 6,
-    saves: 31,
-    model: "Runway Gen-2",
-    createdAt: new Date(Date.now() - 172800000).toISOString(),
-    isLiked: false,
-    isSaved: true,
-    isFollowing: false,
-  },
-  {
-    id: 13,
-    type: "video",
-    mediaUrl: "/feeds/video3.mp4",
-    thumbnailUrl: "/feeds/image9.jpg",
-    prompt: "Product showcase with smooth camera movements",
-    author: { username: "alexcreator", avatar: "", verified: true },
-    likes: 423,
-    comments: 19,
-    shares: 8,
-    saves: 27,
-    model: "VideoFusion",
-    createdAt: new Date(Date.now() - 259200000).toISOString(),
-    isLiked: true,
-    isSaved: false,
-    isFollowing: false,
-  },
-];
-
-const staticAgents: AgentItem[] = [
-  {
-    id: 1,
-    name: "Content Writer Pro",
-    description: "AI agent specialized in creating engaging blog posts and articles",
-    avatar: "",
-    model: "GPT-4",
-    createdAt: new Date(Date.now() - 604800000).toISOString(),
-    interactions: 1247,
-    status: "active",
-  },
-  {
-    id: 2,
-    name: "Image Generator Assistant",
-    description: "Helps create and refine image generation prompts",
-    avatar: "",
-    model: "Claude 3",
-    createdAt: new Date(Date.now() - 1209600000).toISOString(),
-    interactions: 892,
-    status: "active",
-  },
-  {
-    id: 3,
-    name: "Video Editor Bot",
-    description: "Automated video editing and post-production assistant",
-    avatar: "",
-    model: "GPT-4 Turbo",
-    createdAt: new Date(Date.now() - 1814400000).toISOString(),
-    interactions: 634,
-    status: "inactive",
-  },
-];
-
-const stats = [
+const defaultStats = [
   { label: "Generations Today", value: "24", change: "+12%", icon: Sparkles },
   { label: "Credits Used", value: "2,549", change: "51%", icon: Zap },
   { label: "This Week", value: "156", change: "+8%", icon: TrendingUp },
@@ -253,28 +70,72 @@ const DashboardHome = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedItem, setSelectedItem] = useState<FeedItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [galleryItems, setGalleryItems] = useState<FeedItem[]>([]);
+  const [galleryStats, setGalleryStats] = useState<{ totalItems?: number; byContentType?: Record<string, number> } | null>(null);
+  const [isLoadingGallery, setIsLoadingGallery] = useState(true);
 
-  const handleLike = (id: number) => {
+  const [galleryAgents, setGalleryAgents] = useState<AgentItemFromGallery[]>([]);
+
+  const fetchGallery = useCallback(async () => {
+    setIsLoadingGallery(true);
+    try {
+      const isAuth = authAPI.isAuthenticated();
+      const [res, statsRes] = await Promise.all([
+        isAuth
+          ? galleryAPI.getMyGallery({ limit: 50, sortBy: "createdAt", sortOrder: "desc" })
+          : galleryAPI.getPublicGallery({ limit: 50, sortBy: "createdAt", sortOrder: "desc" }),
+        isAuth ? galleryAPI.getMyStats().catch(() => null) : Promise.resolve(null),
+      ]);
+      const allItems = res.items || [];
+      const feedItems = allItems
+        .map(galleryItemToFeedItem)
+        .filter((x): x is FeedItem => x !== null);
+      const agentItems = allItems
+        .map(galleryItemToAgentItem)
+        .filter((x): x is AgentItemFromGallery => x !== null);
+      setGalleryItems(feedItems);
+      setGalleryAgents(agentItems);
+      setGalleryStats(statsRes);
+    } catch {
+      setGalleryItems([]);
+      setGalleryAgents([]);
+      setGalleryStats(null);
+    } finally {
+      setIsLoadingGallery(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchGallery();
+  }, [fetchGallery]);
+
+  const galleryImages = galleryItems.filter((i: FeedItem) => i.type === "image");
+  const galleryVideos = galleryItems.filter((i: FeedItem) => i.type === "video");
+  const displayImages = galleryImages;
+  const displayVideos = galleryVideos;
+  const displayAgents: AgentItem[] = galleryAgents.map((a) => ({ ...a, id: a.id, interactions: a.interactions }));
+
+  const handleLike = (id: number | string) => {
     toast.success("Liked!");
   };
 
-  const handleSave = (id: number) => {
+  const handleSave = (id: number | string) => {
     toast.success("Saved!");
   };
 
-  const handleShare = (id: number) => {
+  const handleShare = (id: number | string) => {
     toast.success("Shared!");
   };
 
-  const handleOpenComments = (id: number) => {
+  const handleOpenComments = (id: number | string) => {
     toast.info("Comments feature coming soon!");
   };
 
-  const handleOpenDetail = (id: number) => {
+  const handleOpenDetail = (id: number | string) => {
     const item =
       activeTab === "images"
-        ? staticImages.find((i) => i.id === id)
-        : staticVideos.find((i) => i.id === id);
+        ? displayImages.find((i) => i.id === id)
+        : displayVideos.find((i) => i.id === id);
     if (item) {
       setSelectedItem(item);
       setIsModalOpen(true);
@@ -282,8 +143,8 @@ const DashboardHome = () => {
   };
 
   const getCurrentItems = () => {
-    if (activeTab === "images") return staticImages.slice(0, 6);
-    if (activeTab === "videos") return staticVideos.slice(0, 6);
+    if (activeTab === "images") return displayImages.slice(0, 6);
+    if (activeTab === "videos") return displayVideos.slice(0, 6);
     return [];
   };
 
@@ -370,7 +231,14 @@ const DashboardHome = () => {
         transition={{ delay: 0.2 }}
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
       >
-        {stats.map((stat) => {
+        {(galleryStats?.totalItems !== undefined && authAPI.isAuthenticated()
+          ? [
+              { label: "Total Creations", value: String(galleryStats.totalItems), change: "", icon: Sparkles },
+              { label: "Images", value: String((galleryStats.byContentType?.image ?? 0) + (galleryStats.byContentType?.image_to_image ?? 0)), change: "", icon: Image },
+              { label: "Videos", value: String(galleryStats.byContentType?.video ?? 0), change: "", icon: Video },
+            ]
+          : defaultStats
+        ).map((stat) => {
           const Icon = stat.icon;
           return (
             <div
@@ -387,17 +255,19 @@ const DashboardHome = () => {
                 <span className="text-3xl font-bold text-foreground">
                   {stat.value}
                 </span>
-                <span
-                  className={`text-base font-medium mb-1 ${
-                    stat.change.startsWith("+")
-                      ? "text-green-600"
-                      : stat.change.startsWith("-")
-                      ? "text-red-500"
-                      : "text-primary"
-                  }`}
-                >
-                  {stat.change}
-                </span>
+                {stat.change && (
+                  <span
+                    className={`text-base font-medium mb-1 ${
+                      stat.change.startsWith("+")
+                        ? "text-green-600"
+                        : stat.change.startsWith("-")
+                        ? "text-red-500"
+                        : "text-primary"
+                    }`}
+                  >
+                    {stat.change}
+                  </span>
+                )}
               </div>
             </div>
           );
@@ -422,7 +292,7 @@ const DashboardHome = () => {
             }`}
           >
             <ImageIcon className="w-4 h-4" />
-            Images ({staticImages.length})
+            Images ({displayImages.length})
           </button>
           <button
             onClick={() => setActiveTab("videos")}
@@ -433,7 +303,7 @@ const DashboardHome = () => {
             }`}
           >
             <Video className="w-4 h-4" />
-            Videos ({staticVideos.length})
+            Videos ({displayVideos.length})
           </button>
           <button
             onClick={() => setActiveTab("agents")}
@@ -444,7 +314,7 @@ const DashboardHome = () => {
             }`}
           >
             <Bot className="w-4 h-4" />
-            Agents ({staticAgents.length})
+            Agents ({displayAgents.length})
           </button>
           <div className="ml-auto flex items-center gap-1 p-1 rounded-lg bg-secondary/30">
             <button
@@ -472,8 +342,16 @@ const DashboardHome = () => {
 
         {/* Content Display */}
         {activeTab === "agents" ? (
+          isLoadingGallery ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-4">
+              <Loader2 className="w-10 h-10 animate-spin text-primary" />
+              <p className="text-muted-foreground text-sm">
+                {authAPI.isAuthenticated() ? "Loading your agents..." : "Loading agents..."}
+              </p>
+            </div>
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {staticAgents.map((agent) => (
+            {displayAgents.map((agent) => (
               <motion.div
                 key={agent.id}
                 initial={{ opacity: 0, y: 10 }}
@@ -509,9 +387,17 @@ const DashboardHome = () => {
               </motion.div>
             ))}
           </div>
+          )
         ) : (
           <div>
-            {viewMode === "grid" ? (
+            {isLoadingGallery ? (
+              <div className="flex flex-col items-center justify-center py-16 gap-4">
+                <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                <p className="text-muted-foreground text-sm">
+                  {authAPI.isAuthenticated() ? "Loading your creations..." : "Loading gallery..."}
+                </p>
+              </div>
+            ) : viewMode === "grid" ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
                 {getCurrentItems().map((item) => (
                   <motion.div

@@ -20,7 +20,7 @@ interface Comment {
 interface CommentsSheetProps {
   isOpen: boolean;
   onClose: () => void;
-  itemId: number;
+  itemId: number | string;
 }
 
 const mockComments: Comment[] = [

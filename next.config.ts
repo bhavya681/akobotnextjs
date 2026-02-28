@@ -11,6 +11,7 @@ const nextConfig: NextConfig = {
     return [
       { source: "/api/auth/:path*", destination: `${API}/auth/:path*` },
       { source: "/api/admin/:path*", destination: `${API}/api/admin/:path*` },
+      { source: "/api/gallery/:path*", destination: `${API}/api/gallery/:path*` },
       { source: "/api/main/:path*", destination: `${API}/:path*` },
       { source: "/api/packages", destination: `${API}/api/packages` },
       { source: "/api/packages/:path*", destination: `${API}/api/packages/:path*` },

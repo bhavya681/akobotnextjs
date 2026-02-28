@@ -10,12 +10,12 @@ import { FeedItem } from "./FeedCard";
 
 interface MasonryCardProps {
   item: FeedItem;
-  onLike: (id: number) => void;
-  onSave: (id: number) => void;
-  onShare: (id: number) => void;
-  onOpenComments: (id: number) => void;
-  onOpenReels?: (id: number) => void;
-  onClick: (id: number) => void;
+  onLike: (id: number | string) => void;
+  onSave: (id: number | string) => void;
+  onShare: (id: number | string) => void;
+  onOpenComments: (id: number | string) => void;
+  onOpenReels?: (id: number | string) => void;
+  onClick: (id: number | string) => void;
 }
 
 const MasonryCard = ({ 
@@ -92,7 +92,8 @@ const MasonryCard = ({
     'aspect-[16/9]',
     'aspect-[9/16]'
   ];
-  const aspectRatio = aspectRatios[item.id % aspectRatios.length];
+  const idNum = typeof item.id === "number" ? item.id : Math.abs([...String(item.id)].reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0));
+  const aspectRatio = aspectRatios[idNum % aspectRatios.length];
 
   return (
     <motion.div

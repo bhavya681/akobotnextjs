@@ -10,7 +10,7 @@ import {
 import { toast } from "sonner";
 
 export interface FeedItem {
-  id: number;
+  id: number | string;
   type: "image" | "video";
   mediaUrl: string;
   thumbnailUrl?: string;
@@ -33,12 +33,12 @@ export interface FeedItem {
 
 interface FeedCardProps {
   item: FeedItem;
-  onLike: (id: number) => void;
-  onSave: (id: number) => void;
-  onShare: (id: number) => void;
-  onFollow: (id: number) => void;
-  onOpenComments: (id: number) => void;
-  onOpenReels?: (id: number) => void;
+  onLike: (id: number | string) => void;
+  onSave: (id: number | string) => void;
+  onShare: (id: number | string) => void;
+  onFollow: (id: number | string) => void;
+  onOpenComments: (id: number | string) => void;
+  onOpenReels?: (id: number | string) => void;
 }
 
 const FeedCard = ({ 

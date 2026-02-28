@@ -3,19 +3,15 @@ import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { 
   TrendingUp, 
-  Clock, 
   Image, 
   Video, 
   Loader2, 
   Sparkles, 
   Heart, 
-  Compass, 
   Bot, 
-  TrendingDown, 
   Grid3x3, 
   User, 
   ArrowRight, 
-  Star, 
   Zap, 
   Users, 
   Briefcase, 
@@ -32,19 +28,6 @@ import ShareSheet from "@/components/feed/ShareSheet";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import { useRouter } from "next/navigation";
 
-const filters = [
-  { id: "All", label: "All", icon: Sparkles },
-  { id: "agents", label: "Agents", icon: Bot },
-  { id: "images", label: "Images", icon: Image },
-  { id: "videos", label: "Videos", icon: Video },
-];
-
-const sortOptions = [
-  { id: "top", label: "Top Day", icon: TrendingUp },
-  { id: "likes", label: "Likes", icon: Heart },
-];
-
-// 1. Define your local images here.
 const LOCAL_IMAGES = [
   "/feeds/image1.jpg",
   "/feeds/image2.jpg",
@@ -57,7 +40,7 @@ const LOCAL_IMAGES = [
   "/feeds/image9.jpg",
   "/feeds/image10.jpg",
   "/feeds/image11.jpg",
-  "/feeds/image12.png", 
+  "/feeds/image12.png",
   "/feeds/image13.jpg",
   "/feeds/image14.jpg",
   "/feeds/image15.jpg",
@@ -70,17 +53,6 @@ const LOCAL_IMAGES = [
   "https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=800",
   "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800",
   "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=800",
-  "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800",
-  "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=800&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1635322966219-b75ed372eb01?w=800&auto=format&fit=crop", 
-  "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=800&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1634152962476-4b8a00e1915c?w=800&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1633511090164-b43840ea1607?w=800&auto=format&fit=crop", 
-  "https://images.unsplash.com/photo-1618172193763-c511deb635ca?w=800&auto=format&fit=crop", 
-  "https://images.unsplash.com/photo-1617791160505-6f00504e3519?w=800&auto=format&fit=crop", 
-  "https://images.unsplash.com/photo-1620121692029-d088224ddc74?w=800&auto=format&fit=crop", 
-
   "/feeds/video1.mp4",
   "/feeds/video2.mp4",
   "/feeds/video3.mp4",
@@ -91,25 +63,10 @@ const LOCAL_IMAGES = [
   "/feeds/video8.mp4",
   "/feeds/video9.mp4",
   "/feeds/video10.mp4",
-  "/feeds/video11.mp4",
-  "/feeds/video12.mp4",
-  "/feeds/video13.mp4",
-  "/feeds/video14.mp4",
-  "/feeds/video15.mp4",
-  "/feeds/video16.mp4",
-  "/feeds/video17.mp4",
-  "/feeds/video18.mp4",
 ];
 
 const generateMockItems = (startId: number, useImages: string[]): FeedItem[] => {
-  const models = [
-    "FLUX Pro",
-    "Stable Diffusion XL",
-    "DALL-E 3",
-    "Midjourney Style",
-    "Runway Gen-3",
-    "Pika Labs",
-  ];
+  const models = ["FLUX Pro", "Stable Diffusion XL", "DALL-E 3", "Midjourney Style", "Runway Gen-3", "Pika Labs"];
   const prompts = [
     "Cyberpunk city with neon lights and flying cars at sunset",
     "Abstract digital art with flowing colors and geometric shapes",
@@ -121,75 +78,51 @@ const generateMockItems = (startId: number, useImages: string[]): FeedItem[] => 
     "Steampunk airship flying through clouds at golden hour",
     "Minimalist Japanese garden with cherry blossoms",
     "Cosmic nebula with vibrant colors and stars",
-    "Hyper realistic portrait of a woman with freckles, dramatic lighting",
-    "Van Gogh style eye with swirling colors and dramatic waves",
-    "Black horse rearing on red background, magazine cover style",
-    "Athletic woman running in urban environment, fitness magazine",
-    "Vintage interior room with afternoon sunlight streaming through windows",
-    "Two monkeys having a conversation, photorealistic animal portrait",
   ];
-  const usernames = [
-    "creator_1",
-    "artist_pro",
-    "filmmaker",
-    "tech_art",
-    "fantasy_maker",
-    "motion_artist",
-    "ai_wizard",
-    "pixel_master",
-    "onboku",
-    "atreyu77",
-    "visual_dreams",
-  ];
+  const usernames = ["creator_1", "artist_pro", "filmmaker", "tech_art", "fantasy_maker", "motion_artist", "ai_wizard"];
   const avatars = [
     "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100",
     "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
     "https://images.unsplash.com/photo-1599566150163-29194dcabd36?w=100",
-    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
-    "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100",
-    "https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=100",
   ];
-
-  // 1-to-1 Mapping: Generate exactly one item per image in the list.
   return useImages.map((imagePath, index) => {
     const id = startId + index;
-    // Set to true if you have video files and want to detect them by extension
-    const isVideo = imagePath.endsWith('.mp4') || imagePath.endsWith('.webm'); 
-    
-    // Cycle through other data if we have more images than prompts/users
-    const randomUser = index % usernames.length;
-    const randomAvatar = index % avatars.length;
-    const randomPrompt = index % prompts.length;
-    const randomModel = index % models.length;
-
-    const hoursAgo = Math.floor(Math.random() * 168);
-    const createdAt = new Date(
-      Date.now() - hoursAgo * 60 * 60 * 1000
-    ).toISOString();
-
+    const isVideo = imagePath.endsWith(".mp4") || imagePath.endsWith(".webm");
     return {
       id,
-      type: isVideo ? "video" : "image",
+      type: (isVideo ? "video" : "image") as "image" | "video",
       mediaUrl: imagePath,
-      thumbnailUrl: isVideo ? imagePath : undefined, 
-      prompt: prompts[randomPrompt],
+      thumbnailUrl: isVideo ? imagePath : undefined,
+      prompt: prompts[index % prompts.length],
       author: {
-        username: usernames[randomUser],
-        avatar: avatars[randomAvatar],
+        username: usernames[index % usernames.length],
+        avatar: avatars[index % avatars.length],
         verified: Math.random() > 0.7,
       },
       likes: Math.floor(Math.random() * 10000) + 100,
       comments: Math.floor(Math.random() * 500) + 10,
       shares: Math.floor(Math.random() * 200) + 5,
       saves: Math.floor(Math.random() * 1000) + 20,
-      model: models[randomModel],
-      createdAt,
+      model: models[index % models.length],
+      createdAt: new Date(Date.now() - Math.floor(Math.random() * 168) * 60 * 60 * 1000).toISOString(),
       isLiked: false,
       isSaved: false,
       isFollowing: Math.random() > 0.6,
     };
   });
 };
+
+const filters = [
+  { id: "All", label: "All", icon: Sparkles },
+  { id: "agents", label: "Agents", icon: Bot },
+  { id: "images", label: "Images", icon: Image },
+  { id: "videos", label: "Videos", icon: Video },
+];
+
+const sortOptions = [
+  { id: "top", label: "Top Day", icon: TrendingUp },
+  { id: "likes", label: "Likes", icon: Heart },
+];
 
 interface Agent {
   id: string;
@@ -277,32 +210,25 @@ const FeedPage = () => {
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState("All");
   const [activeSort, setActiveSort] = useState("top");
-  
-  const [items, setItems] = useState<FeedItem[]>(() =>
-    generateMockItems(1, LOCAL_IMAGES)
-  );
-  
+  const [items, setItems] = useState<FeedItem[]>(() => generateMockItems(1, LOCAL_IMAGES));
   const [isLoading, setIsLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(false); // Disabled infinite scroll to prevent repetition
-  
-  // Modal states
+  const [hasMore, setHasMore] = useState(false);
+
   const [reelsOpen, setReelsOpen] = useState(false);
   const [reelsIndex, setReelsIndex] = useState(0);
   const [commentsOpen, setCommentsOpen] = useState(false);
-  const [commentsItemId, setCommentsItemId] = useState(0);
+  const [commentsItemId, setCommentsItemId] = useState<number | string>(0);
   const [shareOpen, setShareOpen] = useState(false);
-  const [shareItemId, setShareItemId] = useState(0);
+  const [shareItemId, setShareItemId] = useState<number | string>(0);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
-  const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<number | string | null>(null);
 
   const loadMore = useCallback(() => {
-    // Infinite scroll logic disabled to prevent repeating the fixed set of images.
-    // If you add a backend later, re-enable this.
     if (isLoading || !hasMore) return;
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      setHasMore(false); 
+      setHasMore(false);
     }, 1000);
   }, [isLoading, hasMore]);
 
@@ -326,14 +252,12 @@ const FeedPage = () => {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
-  const handleLike = (id: number) => {
+  const handleLike = (id: number | string) => {
     setItems((prev) =>
       prev.map((item) => {
         if (item.id === id) {
           const newIsLiked = !item.isLiked;
-          if (newIsLiked) {
-            toast.success("Added to your likes!");
-          }
+          if (newIsLiked) toast.success("Added to your likes!");
           return {
             ...item,
             isLiked: newIsLiked,
@@ -345,14 +269,12 @@ const FeedPage = () => {
     );
   };
 
-  const handleSave = (id: number) => {
+  const handleSave = (id: number | string) => {
     setItems((prev) =>
       prev.map((item) => {
         if (item.id === id) {
           const newIsSaved = !item.isSaved;
-          toast.success(
-            newIsSaved ? "Saved to collection!" : "Removed from collection"
-          );
+          toast.success(newIsSaved ? "Saved to collection!" : "Removed from collection");
           return {
             ...item,
             isSaved: newIsSaved,
@@ -364,12 +286,12 @@ const FeedPage = () => {
     );
   };
 
-  const handleShare = (id: number) => {
+  const handleShare = (id: number | string) => {
     setShareItemId(id);
     setShareOpen(true);
   };
 
-  const handleFollow = (id: number) => {
+  const handleFollow = (id: number | string) => {
     setItems((prev) =>
       prev.map((item) => {
         if (item.id === id) {
@@ -381,12 +303,12 @@ const FeedPage = () => {
     );
   };
 
-  const handleOpenComments = (id: number) => {
+  const handleOpenComments = (id: number | string) => {
     setCommentsItemId(id);
     setCommentsOpen(true);
   };
 
-  const handleOpenReels = (id: number) => {
+  const handleOpenReels = (id: number | string) => {
     const videoItems = items.filter((item) => item.type === "video");
     const index = videoItems.findIndex((item) => item.id === id);
     if (index !== -1) {
@@ -395,16 +317,14 @@ const FeedPage = () => {
     }
   };
 
-  const handleOpenDetail = (id: number) => {
+  const handleOpenDetail = (id: number | string) => {
     setSelectedItemId(id);
     setDetailModalOpen(true);
   };
 
   const handlePrevDetail = () => {
     const imageItems = sortedItems.filter((item) => item.type === "image");
-    const currentImageIndex = imageItems.findIndex(
-      (item) => item.id === selectedItemId
-    );
+    const currentImageIndex = imageItems.findIndex((item) => item.id === selectedItemId);
     if (currentImageIndex > 0) {
       setSelectedItemId(imageItems[currentImageIndex - 1].id);
     }
@@ -412,9 +332,7 @@ const FeedPage = () => {
 
   const handleNextDetail = () => {
     const imageItems = sortedItems.filter((item) => item.type === "image");
-    const currentImageIndex = imageItems.findIndex(
-      (item) => item.id === selectedItemId
-    );
+    const currentImageIndex = imageItems.findIndex((item) => item.id === selectedItemId);
     if (currentImageIndex < imageItems.length - 1) {
       setSelectedItemId(imageItems[currentImageIndex + 1].id);
     }
@@ -433,7 +351,6 @@ const FeedPage = () => {
       {/* Professional Header */}
       <header className="sticky top-0 z-30 backdrop-blur-2xl bg-white/80 dark:bg-black/40 border-b border-border dark:border-white/10 -mx-2 lg:-mx-4 px-4 lg:px-6 py-3 shadow-lg">
         <div className="flex items-center justify-between gap-4">
-          {/* Left: Logo/Icon and Sort Options */}
           <div className="flex items-center gap-4">
             <motion.div
               whileHover={{ scale: 1.1 }}
@@ -911,22 +828,34 @@ const FeedPage = () => {
             This allows items of varying heights to stack naturally without gaps.
           */}
           <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-2 space-y-2 mx-auto w-full">
-            {sortedItems.map((item) => (
-              <div
-                key={item.id}
-                className="break-inside-avoid mb-4"
-              >
-                <MasonryCard
-                  item={item}
-                  onLike={handleLike}
-                  onSave={handleSave}
-                  onShare={handleShare}
-                  onOpenComments={handleOpenComments}
-                  onOpenReels={handleOpenReels}
-                  onClick={handleOpenDetail}
-                />
+            {sortedItems.length === 0 ? (
+              <div className="col-span-full flex flex-col items-center justify-center py-20 gap-4 text-center">
+                <Image className="w-16 h-16 text-muted-foreground/50" />
+                <p className="text-muted-foreground font-medium">No creations yet. Start creating!</p>
+                <motion.button
+                  onClick={() => router.push("/dashboard/tools")}
+                  className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Create Now
+                </motion.button>
               </div>
-            ))}
+            ) : (
+              sortedItems.map((item) => (
+                <div key={item.id} className="break-inside-avoid mb-4">
+                  <MasonryCard
+                    item={item}
+                    onLike={handleLike}
+                    onSave={handleSave}
+                    onShare={handleShare}
+                    onOpenComments={handleOpenComments}
+                    onOpenReels={handleOpenReels}
+                    onClick={handleOpenDetail}
+                  />
+                </div>
+              ))
+            )}
           </div>
         </div>
 

@@ -109,8 +109,13 @@ const AboutUsPage = () => {
 
   return (
     <main className="min-h-screen bg-background text-foreground overflow-x-hidden w-full relative">
-      {/* Enhanced Background */}
-    
+      <div className="absolute inset-0" style={{
+            backgroundImage: `
+              linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px)
+            `,
+            backgroundSize: "50px 50px",
+          }} ></div>
       <div className="relative z-10">
         <Navbar />
         {/* Hero Section */}
@@ -189,6 +194,14 @@ const AboutUsPage = () => {
                 onClick={() => router.push("/pricing")}
               >
                 Book a Demo
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-2 border-border hover:border-primary/50 px-8 py-6 text-base font-semibold backdrop-blur-sm bg-background/50 hover:bg-muted/30 transition-all"
+                onClick={() => window.open("https://discord.gg/54FjQR7G", "_blank")}
+              >
+                Join our Discord
               </Button>
             </motion.div>
           </div>

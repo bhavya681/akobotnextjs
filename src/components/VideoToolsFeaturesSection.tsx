@@ -1,78 +1,48 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useRef } from "react";
-import { CheckCircle2, ArrowRight, Play, Zap, Shield, Globe } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState, useRef, useEffect } from "react";
 
-const videoCards = [
-  { id: 1, label: "T2Video", video: "/feeds/video1.mp4" },
-  { id: 2, label: "Editing", video: "/feeds/video4.mp4" },
-  { id: 3, label: "Upscale", video: "/feeds/video7.mp4" },
-  { id: 4, label: "Motion", video: "/feeds/video14.mp4" },
+const videoModels = [
+  { id: 1, title: "T2Video", description: "Generate stunning cinematic videos from simple text prompts.", video: "/feeds/video1.mp4" },
+  { id: 2, title: "AI Editing", description: "Transform and modify existing video clips with AI precision.", video: "/feeds/video2.mp4" },
+  { id: 3, title: "Video Upscale", description: "Enhance video resolution and clarity up to 4K quality.", video: "/feeds/video11.mp4" },
+  { id: 4, title: "Motion Synthesis", description: "Add realistic motion and fluid animations to static scenes.", video: "/feeds/video4.mp4" },
+  { id: 5, title: "Style Transfer", description: "Apply artistic styles and cinematic filters to your footage.", video: "/feeds/video5.mp4" },
+  { id: 6, title: "Frame Interpolation", description: "Create buttery smooth slow-motion by generating extra frames.", video: "/feeds/video6.mp4" },
+  { id: 7, title: "Video2Video", description: "Transform one video into another with AI-powered conversion.", video: "/feeds/video7.mp4" },
+  { id: 8, title: "Video2Image", description: "Convert video clips into stunning high-res images.", video: "/feeds/video8.mp4" },
+  { id: 9, title: "Image2Video", description: "Bring your images to life by transforming them into dynamic videos.", video: "/feeds/video9.mp4" },
 ];
 
-interface VideoCardProps {
-  card: { id: number; label: string; video: string };
-  index: number;
-}
-
-const VideoCard = ({ card, index }: VideoCardProps) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  const handleMouseEnter = () => {
-    if (videoRef.current) {
-      videoRef.current.play().catch((err: unknown) => {
-        console.warn("Autoplay prevented:", err);
-      });
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (videoRef.current) {
-      videoRef.current.pause();
-    }
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ once: true }}
-      transition={{
-        duration: 0.5,
-        delay: index * 0.1,
-        ease: [0.4, 0.3, 0, 1],
-      }}
-      whileHover={{ scale: 1.05 }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      className="group relative aspect-square cursor-pointer"
-    >
-      <div className="relative w-full h-full rounded-xl overflow-hidden bg-muted border border-border/50 shadow-2xl">
-        <video
-          ref={videoRef}
-          src={card.video}
-          loop
-          muted
-          playsInline
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
-        <div className="absolute bottom-0 left-0 right-0 p-4">
-          <span className="text-white font-semibold text-sm tracking-wide flex items-center gap-2">
-            <Play size={12} className="fill-current" />
-            {card.label}
-          </span>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
-
 const VideoToolsFeaturesSection = () => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const autoScrollRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const scrollElement = scrollRef.current;
+    if (!scrollElement) return;
+
+    const autoScroll = () => {
+      if (!scrollElement || isPaused) return;
+      const { scrollLeft, scrollWidth } = scrollElement;
+      const halfWidth = scrollWidth / 2;
+
+      if (scrollLeft >= halfWidth) {
+        scrollElement.scrollLeft = 0;
+      } else {
+        // Reduced from 1.5 to 0.8 for a much smoother, slower "luxury" scroll
+        scrollElement.scrollLeft += 0.8; 
+      }
+    };
+
+    autoScrollRef.current = window.setInterval(autoScroll, 16);
+    return () => { if (autoScrollRef.current) clearInterval(autoScrollRef.current); };
+  }, [isPaused]);
+
   return (
-    <section className="py-10 px-15 lg:py-12 relative overflow-x-clip w-full bg-background">
+    <section className="relative py-12 w-full overflow-x-clip bg-background">
       {/* Background Grid - Kept exactly as requested */}
       <div className="absolute inset-0" style={{
             backgroundImage: `
@@ -81,57 +51,92 @@ const VideoToolsFeaturesSection = () => {
             `,
             backgroundSize: "50px 50px",
           }} ></div>
-
       <div className="container mx-auto relative z-10 px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          
-          {/* Left Panel - Enhanced with more content */}
-          <div className="space-y-8">
-            <div className="space-y-6">
-              <span className="inline-block text-xs font-bold tracking-widest uppercase text-primary px-3 py-1 bg-primary/10 rounded-full">
-                EXPLORE AI VIDEO
-              </span>
-              
-              {/* Title - Kept exactly as requested */}
-              <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight leading-tight">
-                Video Tool <span className="gradient-text">Features</span>
-              </h2>
-              
-              <p className="text-muted-foreground text-lg max-w-xl leading-relaxed">
-                Experience the next generation of video creation. Our AI-driven suite 
-                allows you to generate, upscale, and edit cinematic content with simple 
-                prompts and intuitive hover controls.
-              </p>
-            </div>
+        <div className="mb-10">
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-[2.5rem] md:text-5xl lg:text-6xl font-black tracking-tighter leading-tight text-foreground mb-2">
+              Video Tool <span className="gradient-text">Showcase</span>
+            </h2>
+            <p className="mt-1 text-base font-light text-muted-foreground max-w-2xl hidden md:block">
+              Slow-scrolling cinematic previews of our core AI video capabilities.
+            </p>
+          </motion.div>
+        </div>
 
-            {/* Added Feature List - Reference Style */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               {[
-                 { icon: Zap, text: "Instant AI Previews" },
-                 { icon: Shield, text: "Secure Cloud Storage" },
-                 { icon: CheckCircle2, text: "Professional Metadata" },
-                 { icon: Globe, text: "Global CDN Export" }
-               ].map((feature, i) => (
-                 <div key={i} className="flex items-center gap-3 text-foreground/80 font-medium">
-                   <feature.icon className="w-5 h-5 text-primary" />
-                   <span className="text-lg">{feature.text}</span>
-                 </div>
-               ))}
-            </div>
-          </div>
-
-          {/* Right Panel - Grid (Unchanged) */}
-          <div className="grid grid-cols-2 gap-4 md:gap-6 relative">
-            {/* Subtle glow effect behind grid */}
-            <div className="absolute -inset-10 bg-primary/5 blur-[100px] -z-10 rounded-full" />
-            
-            {videoCards.map((card, index) => (
-              <VideoCard key={card.id} card={card} index={index} />
+        <div className="relative">
+          <div
+            ref={scrollRef}
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+            className="flex gap-4 overflow-x-auto scrollbar-hide py-8 px-4"
+          >
+            {[...videoModels, ...videoModels].map((model, index) => (
+              <VideoCardItem key={`${model.id}-${index}`} model={model} />
             ))}
           </div>
         </div>
       </div>
+      <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
     </section>
+  );
+};
+
+const VideoCardItem = ({ model }: { model: any }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const handleMouseEnter = () => videoRef.current?.play().catch(() => {});
+  const handleMouseLeave = () => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+    }
+  };
+
+  return (
+    <div
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className="group relative flex-shrink-0 w-[280px] md:w-[340px] h-[400px] rounded-[2rem] overflow-hidden bg-black border border-white/5 transition-all duration-700 hover:border-primary/40 hover:-translate-y-2"
+    >
+      {/* Video Content - Slightly zoomed for "fill" effect */}
+      <video
+        ref={videoRef}
+        src={model.video}
+        muted
+        loop
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-105 transition-all duration-1000 ease-out"
+      />
+      
+      {/* Sophisticated Vignette Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90" />
+      
+      {/* Card Content */}
+      <div className="absolute inset-x-0 bottom-0 p-5 z-30">
+        <div className="relative p-5 rounded-[1.5rem] bg-white/5 backdrop-blur-md border border-white/10 overflow-hidden transition-all duration-500 group-hover:bg-white/10 group-hover:border-primary/30">
+          
+          {/* Animated Glow Dot */}
+          <div className="absolute top-3 right-3 w-1.5 h-1.5 rounded-full bg-primary opacity-50 group-hover:animate-ping" />
+
+          <h3 className="text-xl font-bold text-white mb-1 group-hover:text-primary transition-colors duration-300">
+            {model.title}
+          </h3>
+          
+          <p className="text-xs md:text-sm text-gray-400 leading-snug line-clamp-2 group-hover:text-gray-200 transition-colors">
+            {model.description}
+          </p>
+
+        </div>
+      </div>
+
+      {/* Edge Glow effect on hover */}
+      <div className="absolute inset-0 border-[2px] border-primary/0 group-hover:border-primary/20 rounded-[2rem] transition-all duration-700 pointer-events-none" />
+    </div>
   );
 };
 

@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "AKO.ai - Create Images & Videos with AI",
+  title: "AKOBOT.ai - Create Images & Videos with AI",
   description: "AKO brings the world's most powerful AI models together to generate, transform, and animate visuals in one place.",
   icons: {
     icon: "./icon.png",

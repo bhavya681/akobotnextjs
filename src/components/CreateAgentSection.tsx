@@ -401,7 +401,7 @@ const CreateAgentSection = () => {
                   <h4 className="text-2xl md:text-3xl font-bold text-foreground mb-8 flex items-center gap-2">
                     <span className="text-purple-500">&gt;</span> What It Does
                   </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 lg:gap-3">
                     {whatItDoesFeatures.map((feature, index) => {
                       const Icon = feature.icon;
                       return (
@@ -411,7 +411,7 @@ const CreateAgentSection = () => {
                           whileInView={{ opacity: 1, y: 0 }}
                           viewport={{ once: true }}
                           transition={{ duration: 0.4, delay: index * 0.06 }}
-                          className="group rounded-xl p-5 bg-background/60 dark:bg-white/[0.06] border border-border/50 dark:border-white/10 hover:border-purple-500/30 transition-all duration-300"
+                          className="group rounded-xl p-4 bg-background/60 dark:bg-white/[0.06] border border-border/50 dark:border-white/10 hover:border-purple-500/30 transition-all duration-300"
                         >
                           <div className="flex flex-col h-full">
                             <div className="mb-3 flex justify-center">
@@ -433,7 +433,7 @@ const CreateAgentSection = () => {
                   <h4 className="text-2xl md:text-3xl font-bold text-foreground mb-8 flex items-center gap-2">
                     <span className="text-purple-500">&gt;</span> Best working bot
                   </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 lg:gap-3">
                     {bestWorkingAgents.map((agent, index) => (
                       <Collapsible key={index} className="group/card">
                         <motion.div

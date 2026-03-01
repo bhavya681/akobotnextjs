@@ -21,7 +21,26 @@ import {
   Clock,
   ArrowRight,
   BarChart3,
+  ExternalLink,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +61,11 @@ const ToolsPage = () => {
   const [activeTopTab, setActiveTopTab] = useState<TabType>("Tickets");
   const [searchQuery, setSearchQuery] = useState("");
 
+
+  const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
+  const [isFeatureModalOpen, setIsFeatureModalOpen] = useState(false);
+  const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   // Dummy data for Tickets tab
   const ticketsData = [
     {
@@ -282,10 +306,72 @@ const ToolsPage = () => {
             Manage and track all support tickets efficiently
           </p>
         </div>
-        <Button className="gap-2 transition-all duration-300 ease-in-out shadow-md hover:shadow-lg dark:shadow-sm">
-          <Plus className="w-4 h-4" />
-          New Ticket
-        </Button>
+       <Dialog open={isTicketModalOpen} onOpenChange={setIsTicketModalOpen}>
+  <DialogTrigger asChild>
+    <Button className="gap-2 transition-all duration-300 ease-in-out shadow-md hover:shadow-lg dark:shadow-sm cursor-pointer">
+      <Plus className="w-4 h-4" />
+      New Ticket
+    </Button>
+  </DialogTrigger>
+  <DialogContent className="sm:max-w-[500px] bg-white dark:bg-[#0f0f0f] border-gray-200 dark:border-gray-800">
+    <DialogHeader>
+      <DialogTitle className="text-xl font-bold">Create New Ticket</DialogTitle>
+      <DialogDescription>
+        Provide details about the issue you are facing.
+      </DialogDescription>
+    </DialogHeader>
+    
+    <div className="grid gap-6 py-4">
+      {/* Ticket Title */}
+      <div className="grid gap-2">
+        <Label htmlFor="title">Ticket Title</Label>
+        <Input id="title" placeholder="Summary of the issue" className="bg-black/95 border-gray-200 dark:border-gray-800" />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        {/* Category */}
+        <div className="grid gap-2">
+          <Label>Category</Label>
+          <Select>
+            <SelectTrigger className="bg-black/95 border-gray-200 dark:border-gray-800">
+              <SelectValue placeholder="Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="tech">Technical</SelectItem>
+              <SelectItem value="bill">Billing</SelectItem>
+              <SelectItem value="bug">Bug</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {/* Priority */}
+        <div className="grid gap-2">
+          <Label>Priority</Label>
+          <Select>
+            <SelectTrigger className="bg-black/95 border-gray-200 dark:border-gray-800">
+              <SelectValue placeholder="Priority" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="low">Low</SelectItem>
+              <SelectItem value="med">Medium</SelectItem>
+              <SelectItem value="high">High</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Description */}
+      <div className="grid gap-2">
+        <Label htmlFor="desc">Description</Label>
+        <Textarea id="desc" placeholder="Details..." className="min-h-[100px] bg-black/95 border-gray-200 dark:border-gray-800" />
+      </div>
+    </div>
+
+    <DialogFooter>
+      <Button variant="outline" onClick={() => setIsTicketModalOpen(false)}>Cancel</Button>
+      <Button onClick={() => setIsTicketModalOpen(false)}>Create Ticket</Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
       </div>
 
       <Card className="border transition-all duration-300 ease-in-out bg-white border-gray-200 shadow-md hover:shadow-lg dark:bg-[#0f0f0f] dark:border-gray-800 dark:shadow-sm">
@@ -410,84 +496,147 @@ const ToolsPage = () => {
   );
 
   const renderFeaturingContent = () => (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-            Featured Products
-          </h2>
-          <p className="text-sm mt-1.5 text-gray-600 dark:text-gray-400">
-            Discover our most popular features and products
-          </p>
-        </div>
-        <Button className="gap-2 transition-all duration-300 ease-in-out shadow-md hover:shadow-lg dark:shadow-sm">
-          <Plus className="w-4 h-4" />
-          Add Feature
-        </Button>
+  <div className="space-y-6">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+          Featured Products
+        </h2>
+        <p className="text-sm mt-1.5 text-gray-600 dark:text-gray-400">
+          Discover our most popular features and products
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {featuringData.map((item) => (
-          <Card
-            key={item.id}
-            className="transition-all duration-300 ease-in-out bg-white border-gray-200 shadow-md hover:shadow-xl hover:border-gray-300 dark:bg-[#0f0f0f] dark:border-gray-800 dark:hover:border-gray-700 dark:hover:shadow-lg"
-          >
-            <CardHeader className="bg-white dark:bg-transparent">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-3">
-                    <CardTitle className="text-xl text-gray-900 dark:text-white">
-                      {item.name}
-                    </CardTitle>
-                    {item.status === "Featured" && (
-                      <Badge className="text-xs bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/20 dark:text-purple-400 dark:border-purple-500/30">
-                        <Star className="w-3 h-3 mr-1 fill-current" />
-                        Featured
-                      </Badge>
-                    )}
-                  </div>
-                  <Badge
-                    variant="outline"
-                    className="mb-3 text-xs bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700"
-                  >
-                    {item.category}
-                  </Badge>
-                  <CardDescription className="text-sm leading-relaxed">
-                    {item.description}
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="bg-white dark:bg-transparent">
-              <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-border">
-                <div className="flex items-center gap-6 text-sm text-gray-600 dark:text-gray-400">
-                  <div className="flex items-center gap-1.5">
-                    <Eye className="w-4 h-4" />
-                    <span className="font-medium">{item.views.toLocaleString()}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span className="font-medium">{item.rating}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <TrendingUp className="w-4 h-4" />
-                    <span className="font-medium">{item.likes}</span>
-                  </div>
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="transition-all duration-300 ease-in-out shadow-sm hover:shadow-md dark:shadow-none"
-                >
-                  View Details
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {/* MODAL START */}
+      <Dialog open={isFeatureModalOpen} onOpenChange={setIsFeatureModalOpen}>
+        <DialogTrigger asChild>
+          <Button className="gap-2 transition-all duration-300 ease-in-out shadow-md hover:shadow-lg dark:shadow-sm cursor-pointer">
+            <Plus className="w-4 h-4" />
+            Add Feature
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[500px] bg-white dark:bg-[#0f0f0f] border-gray-200 dark:border-gray-800">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">Add New Feature</DialogTitle>
+            <DialogDescription>
+              Enter the details to showcase a new product or tool.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-6 py-4">
+            {/* Feature Name */}
+            <div className="grid gap-2">
+              <Label htmlFor="feature-name">Feature Name</Label>
+              <Input 
+                id="feature-name" 
+                placeholder="e.g., Advanced AI Analytics" 
+                className="bg-black/95 border-gray-200 dark:border-gray-800"
+              />
+            </div>
+
+            {/* Category Select */}
+            <div className="grid gap-2">
+              <Label>Category</Label>
+              <Select>
+                <SelectTrigger className="bg-black/95 border-gray-200 dark:border-gray-800">
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="analytics">Analytics</SelectItem>
+                  <SelectItem value="automation">Automation</SelectItem>
+                  <SelectItem value="security">Security</SelectItem>
+                  <SelectItem value="collaboration">Collaboration</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Description Textarea */}
+            <div className="grid gap-2">
+              <Label htmlFor="feature-desc">Description</Label>
+              <Textarea 
+                id="feature-desc" 
+                placeholder="Describe what this feature does..." 
+                className="min-h-[120px] bg-black/95 border-gray-200 dark:border-gray-800"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setIsFeatureModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => setIsFeatureModalOpen(false)} className="bg-primary shadow-lg shadow-primary/20">
+              Add to Showcase
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* MODAL END */}
     </div>
-  );
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {featuringData.map((item) => (
+        <Card
+          key={item.id}
+          className="transition-all duration-300 ease-in-out bg-white border-gray-200 shadow-md hover:shadow-xl hover:border-gray-300 dark:bg-[#0f0f0f] dark:border-gray-800 dark:hover:border-gray-700 dark:hover:shadow-lg"
+        >
+          {/* ... rest of your card code remains exactly the same */}
+          <CardHeader className="bg-white dark:bg-transparent">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-3">
+                  <CardTitle className="text-xl text-gray-900 dark:text-white">
+                    {item.name}
+                  </CardTitle>
+                  {item.status === "Featured" && (
+                    <Badge className="text-xs bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/20 dark:text-purple-400 dark:border-purple-500/30">
+                      <Star className="w-3 h-3 mr-1 fill-current" />
+                      Featured
+                    </Badge>
+                  )}
+                </div>
+                <Badge
+                  variant="outline"
+                  className="mb-3 text-xs bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700"
+                >
+                  {item.category}
+                </Badge>
+                <CardDescription className="text-sm leading-relaxed">
+                  {item.description}
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="bg-white dark:bg-transparent">
+            <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-border">
+              <div className="flex items-center gap-6 text-sm text-gray-600 dark:text-gray-400">
+                <div className="flex items-center gap-1.5">
+                  <Eye className="w-4 h-4" />
+                  <span className="font-medium">{item.views.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  <span className="font-medium">{item.rating}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <TrendingUp className="w-4 h-4" />
+                  <span className="font-medium">{item.likes}</span>
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="transition-all duration-300 ease-in-out shadow-sm hover:shadow-md dark:shadow-none"
+              >
+                View Details
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  </div>
+);
 
   const renderItomeContent = () => (
     <div className="space-y-6">
@@ -501,7 +650,7 @@ const ToolsPage = () => {
           </p>
         </div>
         <Button className="gap-2 transition-all duration-300 ease-in-out shadow-md hover:shadow-lg dark:shadow-sm">
-          <Download className="w-4 h-4" />
+          <ExternalLink className="w-4 h-4" />
           Export Report
         </Button>
       </div>
@@ -615,179 +764,282 @@ const ToolsPage = () => {
     </div>
   );
 
-  const renderFlipatyContent = () => (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-            Subscription Plans
-          </h2>
-          <p className="text-sm mt-1.5 text-gray-600 dark:text-gray-400">
-            Manage pricing and subscription tiers
-          </p>
-        </div>
-        <Button className="gap-2 transition-all duration-300 ease-in-out shadow-md hover:shadow-lg dark:shadow-sm">
-          <Plus className="w-4 h-4" />
-          New Plan
-        </Button>
+ const renderFlipatyContent = () => (
+  <div className="space-y-6">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h2 className="text-3xl font-bold tracking-tight text-white">Subscription Plans</h2>
+        <p className="text-sm mt-1.5 text-gray-400">Manage pricing and subscription tiers</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {flipatyData.map((plan) => (
-          <Card
-            key={plan.id}
-            className={cn(
-              "transition-all duration-300 ease-in-out",
-              plan.id === 1 && "ring-2 ring-primary",
-              "bg-white border-gray-200 shadow-md hover:shadow-xl hover:border-gray-300",
-              "dark:bg-[#0f0f0f] dark:border-gray-800 dark:hover:border-gray-700 dark:hover:shadow-lg"
-            )}
-          >
-            <CardHeader className="bg-white dark:bg-transparent">
-              <div className="flex items-center justify-between mb-4">
-                <CardTitle className="text-xl text-gray-900 dark:text-white">
-                  {plan.name}
-                </CardTitle>
-                <Badge className={cn("text-xs", getStatusColor(plan.status))}>
-                  {plan.status}
+      {/* NEW PLAN MODAL */}
+      <Dialog open={isPlanModalOpen} onOpenChange={setIsPlanModalOpen}>
+        <DialogTrigger asChild>
+          <Button className="gap-2 transition-all duration-300 shadow-md hover:shadow-indigo-500/20 cursor-pointer bg-primary">
+            <Plus className="w-4 h-4" /> New Plan
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[500px] bg-[#0a0a0a] border-gray-800 text-white shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">Create Subscription Plan</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Configure the pricing and features for a new tier.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-5 py-4">
+  {/* Plan Name */}
+  <div className="grid gap-2">
+    <Label htmlFor="pname" className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Plan Name</Label>
+    <Input 
+      id="pname" 
+      placeholder="e.g. Ultimate Plan" 
+      className="bg-[#0f0f0f] border-gray-800 text-gray-300 h-11 focus-visible:ring-1 focus-visible:ring-indigo-500/50"
+    />
+  </div>
+
+  {/* Monthly Price */}
+  <div className="grid gap-2">
+    <Label htmlFor="price" className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Monthly Price</Label>
+    <div className="relative">
+      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+      <Input 
+        id="price" 
+        placeholder="e.g. 299" 
+        className="pl-9 bg-[#0f0f0f] border-gray-800 text-gray-300 h-11 focus-visible:ring-1 focus-visible:ring-indigo-500/50"
+      />
+    </div>
+  </div>
+
+  {/* Features List */}
+  <div className="grid gap-2">
+    <Label className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Key Features (Comma Separated)</Label>
+    <Textarea 
+      placeholder="Unlimited Storage, Priority Support, Advanced Analytics" 
+      className="bg-[#0f0f0f] border-gray-800 text-gray-300 min-h-[100px] focus-visible:ring-1 focus-visible:ring-indigo-500/50"
+    />
+  </div>
+</div>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIsPlanModalOpen(false)} className="hover:bg-gray-900">
+              Cancel
+            </Button>
+            <Button className="bg-primary hover:bg-primary/90 px-8" onClick={() => setIsPlanModalOpen(false)}>
+              Create Plan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+
+    {/* Plan Grid */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {flipatyData.map((plan) => (
+        <Card
+          key={plan.id}
+          className={cn(
+            "transition-all duration-300 bg-[#0f0f0f] border-gray-800 relative overflow-hidden",
+            plan.id === 1 && "ring-2 ring-primary/50 border-primary/50 shadow-[0_0_25px_rgba(99,102,241,0.15)]"
+          )}
+        >
+          <CardHeader>
+            <div className="flex items-center justify-between mb-2">
+              <CardTitle className="text-xl text-white">{plan.name}</CardTitle>
+              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">Active</Badge>
+            </div>
+            <div className="flex items-baseline gap-1 mt-2">
+              <span className="text-4xl font-bold text-white">{plan.price}</span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm text-gray-400 border-b border-gray-800 pb-4">
+                <Users className="w-4 h-4" />
+                <span>{plan.users.toLocaleString()} active users</span>
+              </div>
+              <div className="space-y-3">
+                <p className="text-xs font-semibold uppercase text-gray-500 tracking-wider">Features:</p>
+                <ul className="space-y-3">
+                  {plan.features.map((feature, idx) => (
+                    <li key={idx} className="flex items-center gap-2 text-sm text-gray-300">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <Button
+                className={cn(
+                  "w-full mt-6 h-11 transition-all cursor-pointer",
+                  plan.id === 1 ? "bg-primary hover:bg-primary/90" : "bg-transparent border border-gray-800 hover:bg-gray-900"
+                )}
+                variant={plan.id === 1 ? "default" : "outline"}
+              >
+                {plan.id === 1 ? "Current Plan" : "Upgrade"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  </div>
+);
+
+const renderCominanyContent = () => (
+  <div className="space-y-6">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h2 className="text-3xl font-bold tracking-tight text-white">Companies</h2>
+        <p className="text-sm mt-1.5 text-gray-400">Manage company profiles and information</p>
+      </div>
+
+      {/* MODAL START */}
+      <Dialog open={isCompanyModalOpen} onOpenChange={setIsCompanyModalOpen}>
+        <DialogTrigger asChild>
+          <Button className="gap-2 transition-all duration-300 shadow-md hover:shadow-indigo-500/20 cursor-pointer bg-primary">
+            <Plus className="w-4 h-4" /> Add Company
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[500px] bg-[#0a0a0a] border-gray-800 text-white shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">Register New Company</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Enter the company details to create a new profile.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-5 py-4">
+  {/* Company Name */}
+  <div className="grid gap-2">
+    <Label htmlFor="cname" className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Company Name</Label>
+    <Input 
+      id="cname" 
+      placeholder="e.g. TechCorp Inc." 
+      className="bg-[#0f0f0f] border-gray-800 text-gray-300 placeholder:text-gray-600 focus-visible:ring-1 focus-visible:ring-indigo-500/50 h-11"
+    />
+  </div>
+
+  <div className="grid grid-cols-2 gap-4">
+    {/* Industry */}
+    <div className="grid gap-2">
+      <Label className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Industry</Label>
+      <Select>
+        <SelectTrigger className="bg-[#0f0f0f] border-gray-800 text-gray-300 h-11">
+          <SelectValue placeholder="Select" />
+        </SelectTrigger>
+        <SelectContent className="bg-[#0f0f0f] border-gray-800 text-white">
+          <SelectItem value="tech">Technology</SelectItem>
+          <SelectItem value="design">Design</SelectItem>
+          <SelectItem value="data">Data Analytics</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+
+    {/* Revenue Field - ADDED THIS */}
+    <div className="grid gap-2">
+      <Label htmlFor="revenue" className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Annual Revenue</Label>
+      <div className="relative">
+        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+        <Input 
+          id="revenue" 
+          placeholder="e.g. $5.2M" 
+          className="pl-9 bg-[#0f0f0f] border-gray-800 text-gray-300 placeholder:text-gray-600 h-11"
+        />
+      </div>
+    </div>
+  </div>
+
+  <div className="grid grid-cols-2 gap-4">
+    {/* Employee Count */}
+    <div className="grid gap-2">
+      <Label htmlFor="employees" className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Employees</Label>
+      <Input 
+        id="employees" 
+        type="number" 
+        placeholder="Count" 
+        className="bg-[#0f0f0f] border-gray-800 text-gray-300 h-11"
+      />
+    </div>
+
+    {/* Location */}
+    <div className="grid gap-2">
+      <Label htmlFor="loc" className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Location</Label>
+      <div className="relative">
+        <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+        <Input 
+          id="loc" 
+          placeholder="City, Country" 
+          className="pl-9 bg-[#0f0f0f] border-gray-800 text-gray-300 placeholder:text-gray-600 h-11"
+        />
+      </div>
+    </div>
+  </div>
+</div>
+
+          <DialogFooter className="mt-2">
+            <Button variant="ghost" onClick={() => setIsCompanyModalOpen(false)} className="hover:bg-gray-900">
+              Cancel
+            </Button>
+            <Button className="bg-primary hover:bg-primary/90 px-6" onClick={() => setIsCompanyModalOpen(false)}>
+              Add Company
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* MODAL END */}
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {cominanyData.map((company) => (
+        <Card key={company.id} className="bg-[#0f0f0f] border-gray-800 hover:border-gray-700 transition-all shadow-md">
+          <CardHeader>
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-3">
+                  <Building2 className="w-5 h-5 text-gray-400" />
+                  <CardTitle className="text-xl text-white">{company.name}</CardTitle>
+                </div>
+                <Badge variant="outline" className="mb-3 bg-gray-900 border-gray-800 text-gray-300">
+                  {company.industry}
                 </Badge>
               </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-gray-900 dark:text-white">
-                  {plan.price}
-                </span>
+              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">Active</Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-sm text-gray-400">
+                <Users className="w-4 h-4" /> <span>{company.employees} employees</span>
               </div>
-            </CardHeader>
-            <CardContent className="bg-white dark:bg-transparent">
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 text-sm pb-3 border-b border-gray-200 text-gray-600 dark:border-border dark:text-gray-400">
-                  <Users className="w-4 h-4" />
-                  <span className="font-medium">{plan.users.toLocaleString()} active users</span>
-                </div>
-                <div className="space-y-3">
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    Features:
-                  </p>
-                  <ul className="space-y-2">
-                    {plan.features.map((feature, idx) => (
-                      <li
-                        key={idx}
-                        className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300"
-                      >
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <Button
-                  className={cn(
-                    "w-full mt-4 transition-all duration-300 ease-in-out",
-                    plan.id === 1 
-                      ? "shadow-md hover:shadow-lg dark:shadow-sm"
-                      : "shadow-sm hover:shadow-md dark:shadow-none"
-                  )}
-                  variant={plan.id === 1 ? "default" : "outline"}
-                >
-                  {plan.id === 1 ? "Current Plan" : "Upgrade"}
+              <div className="flex items-center gap-2 text-sm text-gray-400">
+                <DollarSign className="w-4 h-4" /> <span>Revenue: {company.revenue}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-400">
+                <Globe className="w-4 h-4" /> <span>{company.location}</span>
+              </div>
+              <div className="flex items-center gap-2 pt-4 border-t border-gray-800">
+                <Button variant="outline" size="sm" className="flex-1 bg-transparent border-gray-800 hover:bg-gray-900">
+                  <Eye className="w-4 h-4 mr-2" /> View Details
+                </Button>
+                <Button variant="outline" size="sm" className="bg-transparent border-gray-800 hover:bg-gray-900">
+                  <Edit className="w-4 h-4" />
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
             </div>
-  );
-
-  const renderCominanyContent = () => (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-            Companies
-          </h2>
-          <p className="text-sm mt-1.5 text-gray-600 dark:text-gray-400">
-            Manage company profiles and information
-          </p>
-                    </div>
-        <Button className="gap-2 transition-all duration-300 ease-in-out shadow-md hover:shadow-lg dark:shadow-sm">
-          <Plus className="w-4 h-4" />
-          Add Company
-        </Button>
-                    </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {cominanyData.map((company) => (
-          <Card
-            key={company.id}
-            className="transition-all duration-300 ease-in-out bg-white border-gray-200 shadow-md hover:shadow-xl hover:border-gray-300 dark:bg-[#0f0f0f] dark:border-gray-800 dark:hover:border-gray-700 dark:hover:shadow-lg"
-          >
-            <CardHeader className="bg-white dark:bg-transparent">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Building2 className="w-5 h-5 shrink-0 text-gray-600 dark:text-gray-400" />
-                    <CardTitle className="text-xl text-gray-900 dark:text-white">
-                      {company.name}
-                    </CardTitle>
-                  </div>
-                  <Badge
-                    variant="outline"
-                    className="mb-3 text-xs bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700"
-                  >
-                    {company.industry}
-                  </Badge>
-                </div>
-                <Badge className={cn("text-xs", getStatusColor(company.status))}>
-                  {company.status}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="bg-white dark:bg-transparent">
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                  <Users className="w-4 h-4 shrink-0" />
-                  <span>{company.employees} employees</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                  <DollarSign className="w-4 h-4 shrink-0" />
-                  <span>Revenue: {company.revenue}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                  <Globe className="w-4 h-4 shrink-0" />
-                  <span>{company.location}</span>
-                </div>
-                <div className="flex items-center gap-2 pt-3 border-t border-gray-200 dark:border-border">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1 transition-all duration-300 ease-in-out shadow-sm hover:shadow-md dark:shadow-none"
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    View Details
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="transition-all duration-300 ease-in-out shadow-sm hover:shadow-md dark:shadow-none"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                    </div>
-                    </div>
-            </CardContent>
-          </Card>
-        ))}
-                    </div>
-                  </div>
-  );
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  </div>
+);
 
   const tabs: { id: TabType; label: string; icon: any }[] = [
     { id: "Tickets", label: "Tickets", icon: Ticket },
-    { id: "Featuring", label: "Featuring", icon: Star },
-    { id: "Itome", label: "Itome", icon: DollarSign },
-    { id: "Flipaty", label: "Flipaty", icon: Tag },
-    { id: "Cominany", label: "Cominany", icon: Building2 },
+    { id: "Featuring", label: "Features", icon: Star },
+    { id: "Itome", label: "Report", icon: DollarSign },
+    { id: "Flipaty", label: "Pricing", icon: Tag },
+    { id: "Cominany", label: "Company", icon: Building2 },
   ];
 
   const renderContent = () => {
@@ -840,7 +1092,7 @@ const ToolsPage = () => {
                 className="gap-2 transition-all duration-300 ease-in-out border-gray-200 bg-white hover:bg-gray-50 shadow-sm hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800 dark:shadow-none"
               >
                 <Search className="w-4 h-4" />
-                Arierntes
+                Search
               </Button>
               <Button
                 variant="outline"

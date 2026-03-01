@@ -94,17 +94,23 @@ const Navbar = () => {
       path: "/dashboard/tools-old/image",
       description: "Create images with AI",
     },
-    {
-      name: "Video Generation",
-      icon: Video,
-      path: "/dashboard/tools-old/video",
-      description: "Generate videos with AI",
-    },
+    // {
+    //   name: "Video Generation",
+    //   icon: Video,
+    //   path: "/dashboard/tools-old/video",
+    //   description: "Generate videos with AI",
+    // },
     {
       name: "LLM Agent",
       icon: Mic,
       path: "/dashboard/tools-old/agent",
       description: "Interact with voice-enabled AI",
+    },
+    {
+      name: "Multi AI Tool",
+      icon: Zap,  
+      path: "/dashboard/tools-old/multi-ai",
+      description: "Combine multiple models in one tool",
     },
   ];
 
@@ -217,10 +223,6 @@ const Navbar = () => {
                           opacity: 1,
                           scale: (isExpanded || isOpen) ? 1.5 : 1.3, 
                           x: (isExpanded || isOpen) ? 1 : 0,
-                        }}
-                        style={{
-                          filter: "drop-shadow(0 0 1px #fff) drop-shadow(0 0 5px rgba(255,255,255,0.8))" 
-                          
                         }}
                         className="absolute left-0 h-auto w-full max-w-[130px] origin-left object-contain" 
                       />

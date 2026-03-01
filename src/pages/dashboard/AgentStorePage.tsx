@@ -932,7 +932,7 @@ const AgentStorePage = () => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ duration: 0.3 }}
-                className="flex h-full relative z-10"
+                className="flex h-full relative z-0"
               >
                 <div className="w-full lg:w-2/5 p-6 md:p-8 overflow-y-auto border-r border-border/50 bg-background/80 backdrop-blur-sm">
                   <div className="flex items-center gap-3 mb-6">
@@ -954,7 +954,7 @@ const AgentStorePage = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-6">
+                  <div className="space-y-4">
                     <div className="space-y-3">
                       <label className="block text-sm font-medium text-foreground">
                         <span className="flex items-center gap-2">
@@ -963,8 +963,7 @@ const AgentStorePage = () => {
                           <span className="text-destructive">*</span>
                         </span>
                       </label>
-                      <div className="flex flex-col sm:flex-row gap-3">
-                        <div className="relative group flex-1 min-w-0">
+                        <div className="relative group">
                           <Input
                             type="url"
                             value={websiteUrl}
@@ -981,6 +980,60 @@ const AgentStorePage = () => {
                             )}
                           </div>
                         </div>
+                        
+                      <p className="text-xs text-muted-foreground flex items-center gap-2">
+                        <Zap className="w-3 h-3" />
+                        Paste or enter a valid URL — details are fetched automatically after a moment
+                      </p>
+                      {crawledData && (
+                        <div className="rounded-xl border border-border/50 bg-card/50 dark:bg-white/[0.03] p-4 space-y-2">
+                          <p className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+                            Website details fetched
+                          </p>
+                          <div className="flex items-start gap-3">
+                            {(crawledData.favicon || crawledData.logo) && (
+                              <img
+                                src={crawledData.logo || crawledData.favicon || ''}
+                                alt=""
+                                className="w-10 h-10 rounded-lg object-contain bg-muted/50"
+                                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                              />
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-semibold text-foreground truncate">{crawledData.title}</p>
+                              {crawledData.description && (
+                                <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{crawledData.description}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                    <div className="grid gap-6">
+                      <div className="space-y-3">
+                        <label className="block text-sm font-medium text-foreground">
+                          Agent Name
+                        </label>
+                        <Input
+                          value={agentName}
+                          onChange={(e) => setAgentName(e.target.value)}
+                          placeholder="e.g., Customer Support AI"
+                          className="h-12 rounded-xl bg-card border-2 border-border/50 focus:border-primary"
+                        />
+                      </div>
+
+                      <div className="space-y-3">
+                        <label className="block text-sm font-medium text-foreground">
+                          Description
+                        </label>
+                        <Textarea
+                          value={agentDescription}
+                          onChange={(e) => setAgentDescription(e.target.value)}
+                          placeholder="What does your agent do? What problems does it solve?"
+                          rows={3}
+                          className="rounded-xl bg-card border-2 border-border/50 focus:border-primary resize-none"
+                        />
                         <div className="flex gap-3 flex-shrink-0 sm:min-w-0">
                           <div className="space-y-1.5 flex-1 sm:flex-initial sm:w-[140px]">
                             <label className="block text-xs font-medium text-muted-foreground">
@@ -1024,60 +1077,6 @@ const AgentStorePage = () => {
                           </div>
                         </div>
                       </div>
-                      <p className="text-xs text-muted-foreground flex items-center gap-2">
-                        <Zap className="w-3 h-3" />
-                        Paste or enter a valid URL — details are fetched automatically after a moment
-                      </p>
-                      {crawledData && (
-                        <div className="rounded-xl border border-border/50 bg-card/50 dark:bg-white/[0.03] p-4 space-y-2">
-                          <p className="text-xs font-medium text-muted-foreground flex items-center gap-2">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-                            Website details fetched
-                          </p>
-                          <div className="flex items-start gap-3">
-                            {(crawledData.favicon || crawledData.logo) && (
-                              <img
-                                src={crawledData.logo || crawledData.favicon || ''}
-                                alt=""
-                                className="w-10 h-10 rounded-lg object-contain bg-muted/50"
-                                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                              />
-                            )}
-                            <div className="min-w-0 flex-1">
-                              <p className="text-sm font-semibold text-foreground truncate">{crawledData.title}</p>
-                              {crawledData.description && (
-                                <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{crawledData.description}</p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="grid gap-6">
-                      <div className="space-y-3">
-                        <label className="block text-sm font-medium text-foreground">
-                          Agent Name
-                        </label>
-                        <Input
-                          value={agentName}
-                          onChange={(e) => setAgentName(e.target.value)}
-                          placeholder="e.g., Customer Support AI"
-                          className="h-12 rounded-xl bg-card border-2 border-border/50 focus:border-primary"
-                        />
-                      </div>
-
-                      <div className="space-y-3">
-                        <label className="block text-sm font-medium text-foreground">
-                          Description
-                        </label>
-                        <Textarea
-                          value={agentDescription}
-                          onChange={(e) => setAgentDescription(e.target.value)}
-                          placeholder="What does your agent do? What problems does it solve?"
-                          rows={3}
-                          className="rounded-xl bg-card border-2 border-border/50 focus:border-primary resize-none"
-                        />
                       </div>
                     </div>
                   </div>

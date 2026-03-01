@@ -106,6 +106,12 @@ const Navbar = () => {
       path: "/dashboard/tools-old/agent",
       description: "Interact with voice-enabled AI",
     },
+    {
+      name: "Multi AI Tool",
+      icon: Zap,  
+      path: "/dashboard/tools-old/multi-ai",
+      description: "Combine multiple models in one tool",
+    },
   ];
 
   const navLinks = [

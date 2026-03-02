@@ -61,11 +61,11 @@ const ToolsPage = () => {
   const [activeTopTab, setActiveTopTab] = useState<TabType>("Tickets");
   const [searchQuery, setSearchQuery] = useState("");
 
-
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   const [isFeatureModalOpen, setIsFeatureModalOpen] = useState(false);
   const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+
   // Dummy data for Tickets tab
   const ticketsData = [
     {
@@ -263,35 +263,36 @@ const ToolsPage = () => {
     },
   ];
 
+  // Dynamic Opacity-based styling works flawlessly in both themes
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "open":
       case "active":
       case "completed":
-        return "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30";
+        return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20";
       case "in progress":
       case "in review":
-        return "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/30";
+        return "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20";
       case "resolved":
       case "featured":
-        return "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/20 dark:text-purple-400 dark:border-purple-500/30";
+        return "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20";
       case "pending":
-        return "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30";
+        return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20";
       default:
-        return "bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700";
+        return "bg-muted text-muted-foreground border-border";
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority.toLowerCase()) {
       case "high":
-        return "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/20 dark:text-red-400 dark:border-red-500/30";
+        return "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20";
       case "medium":
-        return "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30";
+        return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20";
       case "low":
-        return "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30";
+        return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20";
       default:
-        return "bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700";
+        return "bg-muted text-muted-foreground border-border";
     }
   };
 
@@ -299,106 +300,100 @@ const ToolsPage = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">
             Support Tickets
           </h2>
-          <p className="text-sm mt-1.5 text-gray-600 dark:text-gray-400">
+          <p className="text-sm mt-1.5 text-muted-foreground">
             Manage and track all support tickets efficiently
           </p>
         </div>
-       <Dialog open={isTicketModalOpen} onOpenChange={setIsTicketModalOpen}>
-  <DialogTrigger asChild>
-    <Button className="gap-2 transition-all duration-300 ease-in-out shadow-md hover:shadow-lg dark:shadow-sm cursor-pointer">
-      <Plus className="w-4 h-4" />
-      New Ticket
-    </Button>
-  </DialogTrigger>
-  <DialogContent className="sm:max-w-[500px] bg-white dark:bg-[#0f0f0f] border-gray-200 dark:border-gray-800">
-    <DialogHeader>
-      <DialogTitle className="text-xl font-bold">Create New Ticket</DialogTitle>
-      <DialogDescription>
-        Provide details about the issue you are facing.
-      </DialogDescription>
-    </DialogHeader>
-    
-    <div className="grid gap-6 py-4">
-      {/* Ticket Title */}
-      <div className="grid gap-2">
-        <Label htmlFor="title">Ticket Title</Label>
-        <Input id="title" placeholder="Summary of the issue" className="bg-black/95 border-gray-200 dark:border-gray-800" />
+        <Dialog open={isTicketModalOpen} onOpenChange={setIsTicketModalOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-2 transition-all duration-300 ease-in-out shadow-md hover:shadow-lg cursor-pointer">
+              <Plus className="w-4 h-4" />
+              New Ticket
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold">Create New Ticket</DialogTitle>
+              <DialogDescription>
+                Provide details about the issue you are facing.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid gap-6 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="title">Ticket Title</Label>
+                <Input id="title" placeholder="Summary of the issue" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label>Category</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="tech">Technical</SelectItem>
+                      <SelectItem value="bill">Billing</SelectItem>
+                      <SelectItem value="bug">Bug</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label>Priority</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Priority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="med">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="desc">Description</Label>
+                <Textarea id="desc" placeholder="Details..." className="min-h-[100px]" />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsTicketModalOpen(false)}>Cancel</Button>
+              <Button onClick={() => setIsTicketModalOpen(false)}>Create Ticket</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        {/* Category */}
-        <div className="grid gap-2">
-          <Label>Category</Label>
-          <Select>
-            <SelectTrigger className="bg-black/95 border-gray-200 dark:border-gray-800">
-              <SelectValue placeholder="Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="tech">Technical</SelectItem>
-              <SelectItem value="bill">Billing</SelectItem>
-              <SelectItem value="bug">Bug</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        {/* Priority */}
-        <div className="grid gap-2">
-          <Label>Priority</Label>
-          <Select>
-            <SelectTrigger className="bg-black/95 border-gray-200 dark:border-gray-800">
-              <SelectValue placeholder="Priority" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="low">Low</SelectItem>
-              <SelectItem value="med">Medium</SelectItem>
-              <SelectItem value="high">High</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Description */}
-      <div className="grid gap-2">
-        <Label htmlFor="desc">Description</Label>
-        <Textarea id="desc" placeholder="Details..." className="min-h-[100px] bg-black/95 border-gray-200 dark:border-gray-800" />
-      </div>
-    </div>
-
-    <DialogFooter>
-      <Button variant="outline" onClick={() => setIsTicketModalOpen(false)}>Cancel</Button>
-      <Button onClick={() => setIsTicketModalOpen(false)}>Create Ticket</Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
-      </div>
-
-      <Card className="border transition-all duration-300 ease-in-out bg-white border-gray-200 shadow-md hover:shadow-lg dark:bg-[#0f0f0f] dark:border-gray-800 dark:shadow-sm">
-        <CardHeader className="pb-4 border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-[#0f0f0f]">
+      <Card className="border transition-all duration-300 ease-in-out shadow-md hover:shadow-lg">
+        <CardHeader className="pb-4 border-b border-border">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <CardTitle className="text-gray-900 dark:text-white">
-                Tickets Overview
-              </CardTitle>
+              <CardTitle>Tickets Overview</CardTitle>
               <CardDescription className="mt-1">
                 All support tickets and their current status
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder="Search tickets..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full sm:w-64 pl-9 transition-all duration-300 ease-in-out bg-white border-gray-200 shadow-sm focus:shadow-md focus:border-primary/50 dark:bg-gray-900 dark:border-gray-800 dark:text-white dark:placeholder:text-gray-500"
+                  className="w-full sm:w-64 pl-9 transition-all duration-300 ease-in-out shadow-sm focus:shadow-md"
                 />
               </div>
               <Button 
                 variant="outline" 
                 size="icon" 
-                className="shrink-0 transition-all duration-300 ease-in-out shadow-sm hover:shadow-md dark:shadow-none"
+                className="shrink-0 transition-all duration-300 ease-in-out shadow-sm hover:shadow-md"
               >
                 <Filter className="w-4 h-4" />
               </Button>
@@ -409,28 +404,14 @@ const ToolsPage = () => {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="border-b border-gray-200 hover:bg-gray-50 bg-white dark:border-gray-800 dark:hover:bg-gray-900/50 dark:bg-[#0f0f0f]">
-                  <TableHead className="font-semibold text-gray-700 dark:text-gray-300">
-                    Ticket ID
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 dark:text-gray-300">
-                    Title
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 dark:text-gray-300">
-                    Status
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 dark:text-gray-300">
-                    Priority
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 dark:text-gray-300">
-                    Assignee
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 dark:text-gray-300">
-                    Category
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 dark:text-gray-300">
-                    Created
-                  </TableHead>
+                <TableRow className="border-b border-border hover:bg-muted/50">
+                  <TableHead className="font-semibold">Ticket ID</TableHead>
+                  <TableHead className="font-semibold">Title</TableHead>
+                  <TableHead className="font-semibold">Status</TableHead>
+                  <TableHead className="font-semibold">Priority</TableHead>
+                  <TableHead className="font-semibold">Assignee</TableHead>
+                  <TableHead className="font-semibold">Category</TableHead>
+                  <TableHead className="font-semibold">Created</TableHead>
                   <TableHead className="text-right font-semibold">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -438,48 +419,40 @@ const ToolsPage = () => {
                 {ticketsData.map((ticket) => (
                   <TableRow
                     key={ticket.id}
-                    className="border-b border-gray-200 hover:bg-gray-50 bg-white dark:border-gray-800 dark:hover:bg-gray-900/50 dark:bg-[#0f0f0f]"
+                    className="border-b border-border hover:bg-muted/50 transition-colors"
                   >
-                    <TableCell className="font-medium text-gray-900 dark:text-white">
-                      {ticket.id}
-                    </TableCell>
-                    <TableCell className="text-gray-700 dark:text-gray-300">
-                      {ticket.title}
-                    </TableCell>
+                    <TableCell className="font-medium">{ticket.id}</TableCell>
+                    <TableCell>{ticket.title}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={cn("text-xs", getStatusColor(ticket.status))}>
+                      <Badge variant="outline" className={cn("text-xs border", getStatusColor(ticket.status))}>
                         {ticket.status}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={cn("text-xs", getPriorityColor(ticket.priority))}>
+                      <Badge variant="outline" className={cn("text-xs border", getPriorityColor(ticket.priority))}>
                         {ticket.priority}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-gray-600 dark:text-gray-300">
-                      {ticket.assignee}
-                    </TableCell>
+                    <TableCell className="text-muted-foreground">{ticket.assignee}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="text-xs bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700">
+                      <Badge variant="secondary" className="text-xs">
                         {ticket.category}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-gray-500 dark:text-gray-400">
-                      {ticket.created}
-                    </TableCell>
+                    <TableCell className="text-muted-foreground">{ticket.created}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="h-8 w-8 transition-all duration-300 ease-in-out hover:bg-gray-100 dark:hover:bg-transparent"
+                          className="h-8 w-8 text-muted-foreground transition-all duration-300 ease-in-out hover:bg-accent"
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="h-8 w-8 transition-all duration-300 ease-in-out hover:bg-gray-100 dark:hover:bg-transparent"
+                          className="h-8 w-8 text-muted-foreground transition-all duration-300 ease-in-out hover:bg-accent"
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
@@ -496,160 +469,147 @@ const ToolsPage = () => {
   );
 
   const renderFeaturingContent = () => (
-  <div className="space-y-6">
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-          Featured Products
-        </h2>
-        <p className="text-sm mt-1.5 text-gray-600 dark:text-gray-400">
-          Discover our most popular features and products
-        </p>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">
+            Featured Products
+          </h2>
+          <p className="text-sm mt-1.5 text-muted-foreground">
+            Discover our most popular features and products
+          </p>
+        </div>
+
+        <Dialog open={isFeatureModalOpen} onOpenChange={setIsFeatureModalOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-2 transition-all duration-300 ease-in-out shadow-md hover:shadow-lg cursor-pointer">
+              <Plus className="w-4 h-4" />
+              Add Feature
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold">Add New Feature</DialogTitle>
+              <DialogDescription>
+                Enter the details to showcase a new product or tool.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="grid gap-6 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="feature-name">Feature Name</Label>
+                <Input id="feature-name" placeholder="e.g., Advanced AI Analytics" />
+              </div>
+
+              <div className="grid gap-2">
+                <Label>Category</Label>
+                <Select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="analytics">Analytics</SelectItem>
+                    <SelectItem value="automation">Automation</SelectItem>
+                    <SelectItem value="security">Security</SelectItem>
+                    <SelectItem value="collaboration">Collaboration</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="feature-desc">Description</Label>
+                <Textarea 
+                  id="feature-desc" 
+                  placeholder="Describe what this feature does..." 
+                  className="min-h-[120px]"
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setIsFeatureModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={() => setIsFeatureModalOpen(false)} className="shadow-lg shadow-primary/20">
+                Add to Showcase
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {/* MODAL START */}
-      <Dialog open={isFeatureModalOpen} onOpenChange={setIsFeatureModalOpen}>
-        <DialogTrigger asChild>
-          <Button className="gap-2 transition-all duration-300 ease-in-out shadow-md hover:shadow-lg dark:shadow-sm cursor-pointer">
-            <Plus className="w-4 h-4" />
-            Add Feature
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[500px] bg-white dark:bg-[#0f0f0f] border-gray-200 dark:border-gray-800">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Add New Feature</DialogTitle>
-            <DialogDescription>
-              Enter the details to showcase a new product or tool.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid gap-6 py-4">
-            {/* Feature Name */}
-            <div className="grid gap-2">
-              <Label htmlFor="feature-name">Feature Name</Label>
-              <Input 
-                id="feature-name" 
-                placeholder="e.g., Advanced AI Analytics" 
-                className="bg-black/95 border-gray-200 dark:border-gray-800"
-              />
-            </div>
-
-            {/* Category Select */}
-            <div className="grid gap-2">
-              <Label>Category</Label>
-              <Select>
-                <SelectTrigger className="bg-black/95 border-gray-200 dark:border-gray-800">
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="analytics">Analytics</SelectItem>
-                  <SelectItem value="automation">Automation</SelectItem>
-                  <SelectItem value="security">Security</SelectItem>
-                  <SelectItem value="collaboration">Collaboration</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Description Textarea */}
-            <div className="grid gap-2">
-              <Label htmlFor="feature-desc">Description</Label>
-              <Textarea 
-                id="feature-desc" 
-                placeholder="Describe what this feature does..." 
-                className="min-h-[120px] bg-black/95 border-gray-200 dark:border-gray-800"
-              />
-            </div>
-          </div>
-
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setIsFeatureModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={() => setIsFeatureModalOpen(false)} className="bg-primary shadow-lg shadow-primary/20">
-              Add to Showcase
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      {/* MODAL END */}
-    </div>
-
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {featuringData.map((item) => (
-        <Card
-          key={item.id}
-          className="transition-all duration-300 ease-in-out bg-white border-gray-200 shadow-md hover:shadow-xl hover:border-gray-300 dark:bg-[#0f0f0f] dark:border-gray-800 dark:hover:border-gray-700 dark:hover:shadow-lg"
-        >
-          {/* ... rest of your card code remains exactly the same */}
-          <CardHeader className="bg-white dark:bg-transparent">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-3">
-                  <CardTitle className="text-xl text-gray-900 dark:text-white">
-                    {item.name}
-                  </CardTitle>
-                  {item.status === "Featured" && (
-                    <Badge className="text-xs bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/20 dark:text-purple-400 dark:border-purple-500/30">
-                      <Star className="w-3 h-3 mr-1 fill-current" />
-                      Featured
-                    </Badge>
-                  )}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {featuringData.map((item) => (
+          <Card
+            key={item.id}
+            className="transition-all duration-300 ease-in-out shadow-md hover:shadow-xl hover:border-border"
+          >
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-3">
+                    <CardTitle className="text-xl">
+                      {item.name}
+                    </CardTitle>
+                    {item.status === "Featured" && (
+                      <Badge variant="outline" className="text-xs border-purple-500/20 bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                        <Star className="w-3 h-3 mr-1 fill-current" />
+                        Featured
+                      </Badge>
+                    )}
+                  </div>
+                  <Badge variant="secondary" className="mb-3 text-xs">
+                    {item.category}
+                  </Badge>
+                  <CardDescription className="text-sm leading-relaxed">
+                    {item.description}
+                  </CardDescription>
                 </div>
-                <Badge
-                  variant="outline"
-                  className="mb-3 text-xs bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700"
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between pt-4 border-t border-border">
+                <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1.5">
+                    <Eye className="w-4 h-4" />
+                    <span className="font-medium">{item.views.toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-500 dark:text-yellow-400" />
+                    <span className="font-medium">{item.rating}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <TrendingUp className="w-4 h-4" />
+                    <span className="font-medium">{item.likes}</span>
+                  </div>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="transition-all duration-300 ease-in-out shadow-sm hover:shadow-md"
                 >
-                  {item.category}
-                </Badge>
-                <CardDescription className="text-sm leading-relaxed">
-                  {item.description}
-                </CardDescription>
+                  View Details
+                </Button>
               </div>
-            </div>
-          </CardHeader>
-          <CardContent className="bg-white dark:bg-transparent">
-            <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-border">
-              <div className="flex items-center gap-6 text-sm text-gray-600 dark:text-gray-400">
-                <div className="flex items-center gap-1.5">
-                  <Eye className="w-4 h-4" />
-                  <span className="font-medium">{item.views.toLocaleString()}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  <span className="font-medium">{item.rating}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <TrendingUp className="w-4 h-4" />
-                  <span className="font-medium">{item.likes}</span>
-                </div>
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="transition-all duration-300 ease-in-out shadow-sm hover:shadow-md dark:shadow-none"
-              >
-                View Details
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
 
   const renderItomeContent = () => (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">
             Income Reports
           </h2>
-          <p className="text-sm mt-1.5 text-gray-600 dark:text-gray-400">
+          <p className="text-sm mt-1.5 text-muted-foreground">
             Track revenue and financial metrics
           </p>
         </div>
-        <Button className="gap-2 transition-all duration-300 ease-in-out shadow-md hover:shadow-lg dark:shadow-sm">
+        <Button className="gap-2 transition-all duration-300 ease-in-out shadow-md hover:shadow-lg">
           <ExternalLink className="w-4 h-4" />
           Export Report
         </Button>
@@ -666,17 +626,17 @@ const ToolsPage = () => {
           return (
             <Card
               key={idx}
-              className="transition-all duration-300 ease-in-out bg-white border-gray-200 shadow-md hover:shadow-lg dark:bg-[#0f0f0f] dark:border-gray-800 dark:hover:shadow-md"
+              className="transition-all duration-300 ease-in-out shadow-md hover:shadow-lg"
             >
-              <CardHeader className="pb-3 bg-white dark:bg-transparent">
+              <CardHeader className="pb-3">
                 <CardDescription className="text-xs font-medium uppercase tracking-wide">
                   {stat.label}
                 </CardDescription>
-                <CardTitle className="text-2xl font-bold mt-2 text-gray-900 dark:text-white">
+                <CardTitle className="text-2xl font-bold mt-2">
                   {stat.value}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="bg-white dark:bg-transparent">
+              <CardContent>
                 <div className="flex items-center gap-2 text-sm font-medium text-emerald-600 dark:text-emerald-400">
                   <TrendingUp className="w-4 h-4" />
                   <span>{stat.change} from last month</span>
@@ -687,61 +647,40 @@ const ToolsPage = () => {
         })}
       </div>
 
-      <Card className="border transition-all duration-300 ease-in-out bg-white border-gray-200 shadow-md hover:shadow-lg dark:bg-[#0f0f0f] dark:border-gray-800 dark:shadow-sm">
-        <CardHeader className="pb-4 border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-[#0f0f0f]">
-          <CardTitle className="text-gray-900 dark:text-white">
-            Recent Reports
-          </CardTitle>
+      <Card className="transition-all duration-300 ease-in-out shadow-md hover:shadow-lg">
+        <CardHeader className="pb-4 border-b border-border">
+          <CardTitle>Recent Reports</CardTitle>
           <CardDescription>Latest income and analytics reports</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="border-b border-gray-200 hover:bg-gray-50 bg-white dark:border-gray-800 dark:hover:bg-gray-900/50 dark:bg-[#0f0f0f]">
-                  <TableHead className="font-semibold text-gray-700 dark:text-gray-300">
-                    Title
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 dark:text-gray-300">
-                    Type
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 dark:text-gray-300">
-                    Amount
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 dark:text-gray-300">
-                    Date
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 dark:text-gray-300">
-                    Status
-                  </TableHead>
-                  <TableHead className="text-right font-semibold text-gray-700 dark:text-gray-300">Actions</TableHead>
+                <TableRow className="border-b border-border hover:bg-muted/50">
+                  <TableHead className="font-semibold">Title</TableHead>
+                  <TableHead className="font-semibold">Type</TableHead>
+                  <TableHead className="font-semibold">Amount</TableHead>
+                  <TableHead className="font-semibold">Date</TableHead>
+                  <TableHead className="font-semibold">Status</TableHead>
+                  <TableHead className="text-right font-semibold">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {itomeData.map((item) => (
                   <TableRow
                     key={item.id}
-                    className="border-b border-gray-200 hover:bg-gray-50 bg-white dark:border-gray-800 dark:hover:bg-gray-900/50 dark:bg-[#0f0f0f]"
+                    className="border-b border-border hover:bg-muted/50 transition-colors"
                   >
-                    <TableCell className="font-medium text-gray-900 dark:text-white">
-                      {item.title}
-                    </TableCell>
+                    <TableCell className="font-medium">{item.title}</TableCell>
                     <TableCell>
-                      <Badge
-                        variant="outline"
-                        className="text-xs bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700"
-                      >
+                      <Badge variant="secondary" className="text-xs">
                         {item.type}
                       </Badge>
                     </TableCell>
-                    <TableCell className="font-semibold text-gray-900 dark:text-white">
-                      {item.amount}
-                    </TableCell>
-                    <TableCell className="text-gray-500 dark:text-gray-400">
-                      {item.date}
-                    </TableCell>
+                    <TableCell className="font-semibold">{item.amount}</TableCell>
+                    <TableCell className="text-muted-foreground">{item.date}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={cn("text-xs", getStatusColor(item.status))}>
+                      <Badge variant="outline" className={cn("text-xs border", getStatusColor(item.status))}>
                         {item.status}
                       </Badge>
                     </TableCell>
@@ -749,7 +688,7 @@ const ToolsPage = () => {
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="h-8 w-8 transition-all duration-300 ease-in-out hover:bg-gray-100 dark:hover:bg-transparent"
+                        className="h-8 w-8 text-muted-foreground transition-all duration-300 ease-in-out hover:bg-accent"
                       >
                         <Download className="w-4 h-4" />
                       </Button>
@@ -764,275 +703,224 @@ const ToolsPage = () => {
     </div>
   );
 
- const renderFlipatyContent = () => (
-  <div className="space-y-6">
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight text-white">Subscription Plans</h2>
-        <p className="text-sm mt-1.5 text-gray-400">Manage pricing and subscription tiers</p>
-      </div>
+  const renderFlipatyContent = () => (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">Subscription Plans</h2>
+          <p className="text-sm mt-1.5 text-muted-foreground">Manage pricing and subscription tiers</p>
+        </div>
 
-      {/* NEW PLAN MODAL */}
-      <Dialog open={isPlanModalOpen} onOpenChange={setIsPlanModalOpen}>
-        <DialogTrigger asChild>
-          <Button className="gap-2 transition-all duration-300 shadow-md hover:shadow-indigo-500/20 cursor-pointer bg-primary">
-            <Plus className="w-4 h-4" /> New Plan
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[500px] bg-[#0a0a0a] border-gray-800 text-white shadow-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Create Subscription Plan</DialogTitle>
-            <DialogDescription className="text-gray-400">
-              Configure the pricing and features for a new tier.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid gap-5 py-4">
-  {/* Plan Name */}
-  <div className="grid gap-2">
-    <Label htmlFor="pname" className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Plan Name</Label>
-    <Input 
-      id="pname" 
-      placeholder="e.g. Ultimate Plan" 
-      className="bg-[#0f0f0f] border-gray-800 text-gray-300 h-11 focus-visible:ring-1 focus-visible:ring-indigo-500/50"
-    />
-  </div>
-
-  {/* Monthly Price */}
-  <div className="grid gap-2">
-    <Label htmlFor="price" className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Monthly Price</Label>
-    <div className="relative">
-      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-      <Input 
-        id="price" 
-        placeholder="e.g. 299" 
-        className="pl-9 bg-[#0f0f0f] border-gray-800 text-gray-300 h-11 focus-visible:ring-1 focus-visible:ring-indigo-500/50"
-      />
-    </div>
-  </div>
-
-  {/* Features List */}
-  <div className="grid gap-2">
-    <Label className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Key Features (Comma Separated)</Label>
-    <Textarea 
-      placeholder="Unlimited Storage, Priority Support, Advanced Analytics" 
-      className="bg-[#0f0f0f] border-gray-800 text-gray-300 min-h-[100px] focus-visible:ring-1 focus-visible:ring-indigo-500/50"
-    />
-  </div>
-</div>
-
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setIsPlanModalOpen(false)} className="hover:bg-gray-900">
-              Cancel
+        <Dialog open={isPlanModalOpen} onOpenChange={setIsPlanModalOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-2 transition-all duration-300 shadow-md cursor-pointer">
+              <Plus className="w-4 h-4" /> New Plan
             </Button>
-            <Button className="bg-primary hover:bg-primary/90 px-8" onClick={() => setIsPlanModalOpen(false)}>
-              Create Plan
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold">Create Subscription Plan</DialogTitle>
+              <DialogDescription>
+                Configure the pricing and features for a new tier.
+              </DialogDescription>
+            </DialogHeader>
 
-    {/* Plan Grid */}
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {flipatyData.map((plan) => (
-        <Card
-          key={plan.id}
-          className={cn(
-            "transition-all duration-300 bg-[#0f0f0f] border-gray-800 relative overflow-hidden",
-            plan.id === 1 && "ring-2 ring-primary/50 border-primary/50 shadow-[0_0_25px_rgba(99,102,241,0.15)]"
-          )}
-        >
-          <CardHeader>
-            <div className="flex items-center justify-between mb-2">
-              <CardTitle className="text-xl text-white">{plan.name}</CardTitle>
-              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">Active</Badge>
-            </div>
-            <div className="flex items-baseline gap-1 mt-2">
-              <span className="text-4xl font-bold text-white">{plan.price}</span>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 text-sm text-gray-400 border-b border-gray-800 pb-4">
-                <Users className="w-4 h-4" />
-                <span>{plan.users.toLocaleString()} active users</span>
+            <div className="grid gap-5 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="pname" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Plan Name</Label>
+                <Input id="pname" placeholder="e.g. Ultimate Plan" className="h-11" />
               </div>
-              <div className="space-y-3">
-                <p className="text-xs font-semibold uppercase text-gray-500 tracking-wider">Features:</p>
-                <ul className="space-y-3">
-                  {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-center gap-2 text-sm text-gray-300">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <Button
-                className={cn(
-                  "w-full mt-6 h-11 transition-all cursor-pointer",
-                  plan.id === 1 ? "bg-primary hover:bg-primary/90" : "bg-transparent border border-gray-800 hover:bg-gray-900"
-                )}
-                variant={plan.id === 1 ? "default" : "outline"}
-              >
-                {plan.id === 1 ? "Current Plan" : "Upgrade"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  </div>
-);
 
-const renderCominanyContent = () => (
-  <div className="space-y-6">
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight text-white">Companies</h2>
-        <p className="text-sm mt-1.5 text-gray-400">Manage company profiles and information</p>
-      </div>
-
-      {/* MODAL START */}
-      <Dialog open={isCompanyModalOpen} onOpenChange={setIsCompanyModalOpen}>
-        <DialogTrigger asChild>
-          <Button className="gap-2 transition-all duration-300 shadow-md hover:shadow-indigo-500/20 cursor-pointer bg-primary">
-            <Plus className="w-4 h-4" /> Add Company
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[500px] bg-[#0a0a0a] border-gray-800 text-white shadow-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Register New Company</DialogTitle>
-            <DialogDescription className="text-gray-400">
-              Enter the company details to create a new profile.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid gap-5 py-4">
-  {/* Company Name */}
-  <div className="grid gap-2">
-    <Label htmlFor="cname" className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Company Name</Label>
-    <Input 
-      id="cname" 
-      placeholder="e.g. TechCorp Inc." 
-      className="bg-[#0f0f0f] border-gray-800 text-gray-300 placeholder:text-gray-600 focus-visible:ring-1 focus-visible:ring-indigo-500/50 h-11"
-    />
-  </div>
-
-  <div className="grid grid-cols-2 gap-4">
-    {/* Industry */}
-    <div className="grid gap-2">
-      <Label className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Industry</Label>
-      <Select>
-        <SelectTrigger className="bg-[#0f0f0f] border-gray-800 text-gray-300 h-11">
-          <SelectValue placeholder="Select" />
-        </SelectTrigger>
-        <SelectContent className="bg-[#0f0f0f] border-gray-800 text-white">
-          <SelectItem value="tech">Technology</SelectItem>
-          <SelectItem value="design">Design</SelectItem>
-          <SelectItem value="data">Data Analytics</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
-
-    {/* Revenue Field - ADDED THIS */}
-    <div className="grid gap-2">
-      <Label htmlFor="revenue" className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Annual Revenue</Label>
-      <div className="relative">
-        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-        <Input 
-          id="revenue" 
-          placeholder="e.g. $5.2M" 
-          className="pl-9 bg-[#0f0f0f] border-gray-800 text-gray-300 placeholder:text-gray-600 h-11"
-        />
-      </div>
-    </div>
-  </div>
-
-  <div className="grid grid-cols-2 gap-4">
-    {/* Employee Count */}
-    <div className="grid gap-2">
-      <Label htmlFor="employees" className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Employees</Label>
-      <Input 
-        id="employees" 
-        type="number" 
-        placeholder="Count" 
-        className="bg-[#0f0f0f] border-gray-800 text-gray-300 h-11"
-      />
-    </div>
-
-    {/* Location */}
-    <div className="grid gap-2">
-      <Label htmlFor="loc" className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Location</Label>
-      <div className="relative">
-        <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-        <Input 
-          id="loc" 
-          placeholder="City, Country" 
-          className="pl-9 bg-[#0f0f0f] border-gray-800 text-gray-300 placeholder:text-gray-600 h-11"
-        />
-      </div>
-    </div>
-  </div>
-</div>
-
-          <DialogFooter className="mt-2">
-            <Button variant="ghost" onClick={() => setIsCompanyModalOpen(false)} className="hover:bg-gray-900">
-              Cancel
-            </Button>
-            <Button className="bg-primary hover:bg-primary/90 px-6" onClick={() => setIsCompanyModalOpen(false)}>
-              Add Company
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      {/* MODAL END */}
-    </div>
-
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {cominanyData.map((company) => (
-        <Card key={company.id} className="bg-[#0f0f0f] border-gray-800 hover:border-gray-700 transition-all shadow-md">
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-3">
-                  <Building2 className="w-5 h-5 text-gray-400" />
-                  <CardTitle className="text-xl text-white">{company.name}</CardTitle>
+              <div className="grid gap-2">
+                <Label htmlFor="price" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Monthly Price</Label>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input id="price" placeholder="e.g. 299" className="pl-9 h-11" />
                 </div>
-                <Badge variant="outline" className="mb-3 bg-gray-900 border-gray-800 text-gray-300">
-                  {company.industry}
-                </Badge>
               </div>
-              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">Active</Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm text-gray-400">
-                <Users className="w-4 h-4" /> <span>{company.employees} employees</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-gray-400">
-                <DollarSign className="w-4 h-4" /> <span>Revenue: {company.revenue}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-gray-400">
-                <Globe className="w-4 h-4" /> <span>{company.location}</span>
-              </div>
-              <div className="flex items-center gap-2 pt-4 border-t border-gray-800">
-                <Button variant="outline" size="sm" className="flex-1 bg-transparent border-gray-800 hover:bg-gray-900">
-                  <Eye className="w-4 h-4 mr-2" /> View Details
-                </Button>
-                <Button variant="outline" size="sm" className="bg-transparent border-gray-800 hover:bg-gray-900">
-                  <Edit className="w-4 h-4" />
-                </Button>
+
+              <div className="grid gap-2">
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Key Features (Comma Separated)</Label>
+                <Textarea placeholder="Unlimited Storage, Priority Support, Advanced Analytics" className="min-h-[100px]" />
               </div>
             </div>
-          </CardContent>
-        </Card>
-      ))}
+
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => setIsPlanModalOpen(false)}>Cancel</Button>
+              <Button className="px-8" onClick={() => setIsPlanModalOpen(false)}>Create Plan</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {flipatyData.map((plan) => (
+          <Card
+            key={plan.id}
+            className={cn(
+              "transition-all duration-300 relative overflow-hidden shadow-sm",
+              plan.id === 1 && "ring-2 ring-primary border-primary shadow-[0_0_25px_rgba(99,102,241,0.1)]"
+            )}
+          >
+            <CardHeader>
+              <div className="flex items-center justify-between mb-2">
+                <CardTitle className="text-xl">{plan.name}</CardTitle>
+                <Badge variant="outline" className="border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">Active</Badge>
+              </div>
+              <div className="flex items-baseline gap-1 mt-2">
+                <span className="text-4xl font-bold">{plan.price}</span>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground border-b border-border pb-4">
+                  <Users className="w-4 h-4" />
+                  <span>{plan.users.toLocaleString()} active users</span>
+                </div>
+                <div className="space-y-3">
+                  <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">Features:</p>
+                  <ul className="space-y-3">
+                    {plan.features.map((feature, idx) => (
+                      <li key={idx} className="flex items-center gap-2 text-sm">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                        <span className="text-foreground">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <Button
+                  className="w-full mt-6 h-11 transition-all cursor-pointer"
+                  variant={plan.id === 1 ? "default" : "outline"}
+                >
+                  {plan.id === 1 ? "Current Plan" : "Upgrade"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
+
+  const renderCominanyContent = () => (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">Companies</h2>
+          <p className="text-sm mt-1.5 text-muted-foreground">Manage company profiles and information</p>
+        </div>
+
+        <Dialog open={isCompanyModalOpen} onOpenChange={setIsCompanyModalOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-2 transition-all duration-300 shadow-md cursor-pointer">
+              <Plus className="w-4 h-4" /> Add Company
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold">Register New Company</DialogTitle>
+              <DialogDescription>
+                Enter the company details to create a new profile.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="grid gap-5 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="cname" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Company Name</Label>
+                <Input id="cname" placeholder="e.g. TechCorp Inc." className="h-11" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Industry</Label>
+                  <Select>
+                    <SelectTrigger className="h-11">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="tech">Technology</SelectItem>
+                      <SelectItem value="design">Design</SelectItem>
+                      <SelectItem value="data">Data Analytics</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="revenue" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Annual Revenue</Label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input id="revenue" placeholder="e.g. $5.2M" className="pl-9 h-11" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="employees" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Employees</Label>
+                  <Input id="employees" type="number" placeholder="Count" className="h-11" />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="loc" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Location</Label>
+                  <div className="relative">
+                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input id="loc" placeholder="City, Country" className="pl-9 h-11" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter className="mt-2">
+              <Button variant="ghost" onClick={() => setIsCompanyModalOpen(false)}>Cancel</Button>
+              <Button className="px-6" onClick={() => setIsCompanyModalOpen(false)}>Add Company</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {cominanyData.map((company) => (
+          <Card key={company.id} className="transition-all shadow-md hover:border-border">
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Building2 className="w-5 h-5 text-muted-foreground" />
+                    <CardTitle className="text-xl">{company.name}</CardTitle>
+                  </div>
+                  <Badge variant="secondary" className="mb-3">
+                    {company.industry}
+                  </Badge>
+                </div>
+                <Badge variant="outline" className="border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">Active</Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Users className="w-4 h-4" /> <span>{company.employees} employees</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <DollarSign className="w-4 h-4" /> <span>Revenue: {company.revenue}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Globe className="w-4 h-4" /> <span>{company.location}</span>
+                </div>
+                <div className="flex items-center gap-2 pt-4 border-t border-border">
+                  <Button variant="outline" size="sm" className="flex-1 hover:bg-accent">
+                    <Eye className="w-4 h-4 mr-2" /> View Details
+                  </Button>
+                  <Button variant="outline" size="sm" className="hover:bg-accent">
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
 
   const tabs: { id: TabType; label: string; icon: any }[] = [
     { id: "Tickets", label: "Tickets", icon: Ticket },
@@ -1060,9 +948,9 @@ const renderCominanyContent = () => (
   };
 
   return (
-    <div className="min-h-screen transition-all duration-300 ease-in-out bg-white dark:bg-[#0a0a0a]">
+    <div className="min-h-screen transition-all duration-300 ease-in-out bg-background text-foreground">
       {/* Top Navigation Bar */}
-      <div className="border-b shadow-sm backdrop-blur-sm transition-all duration-300 ease-in-out sticky top-0 z-10 border-gray-200 bg-white/95 shadow-md dark:border-gray-800 dark:bg-[#0a0a0a]/95 dark:shadow-sm">
+      <div className="border-b shadow-sm backdrop-blur-sm transition-all duration-300 ease-in-out sticky top-0 z-10 border-border bg-background/95">
         <div className="container mx-auto px-4 py-4 max-w-full">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-1 flex-wrap">
@@ -1076,7 +964,7 @@ const renderCominanyContent = () => (
                       "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ease-in-out",
                       activeTopTab === tab.id
                         ? "bg-primary text-primary-foreground shadow-md"
-                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50 border border-transparent hover:border-gray-200 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-800/50 dark:border-transparent"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted border border-transparent"
                     )}
                   >
                     <Icon className="w-4 h-4" />
@@ -1089,7 +977,7 @@ const renderCominanyContent = () => (
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2 transition-all duration-300 ease-in-out border-gray-200 bg-white hover:bg-gray-50 shadow-sm hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800 dark:shadow-none"
+                className="gap-2 transition-all duration-300 ease-in-out shadow-sm hover:shadow-md"
               >
                 <Search className="w-4 h-4" />
                 Search
@@ -1097,7 +985,7 @@ const renderCominanyContent = () => (
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2 transition-all duration-300 ease-in-out border-gray-200 bg-white hover:bg-gray-50 shadow-sm hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800 dark:shadow-none"
+                className="gap-2 transition-all duration-300 ease-in-out shadow-sm hover:shadow-md"
               >
                 <Globe className="w-4 h-4" />
                 Red Wertory
@@ -1105,22 +993,22 @@ const renderCominanyContent = () => (
             </div>
           </div>
         </div>
-        </div>
+      </div>
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8 max-w-full">
         <AnimatePresence mode="wait">
-      <motion.div
+          <motion.div
             key={activeTopTab}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
           >
             {renderContent()}
           </motion.div>
         </AnimatePresence>
-        </div>
+      </div>
     </div>
   );
 };

@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Use class-based dark mode instead of system preference - respects our theme toggle */
+@variant dark (&:where(.dark, .dark *));
+
 @theme inline {
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
@@ -25,8 +28,8 @@
 
 @layer base {
   :root {
-    /* BASE LIGHT THEME COLORS */
-    --background: 210 20% 98%;
+    /* BASE LIGHT THEME COLORS - Pure white */
+    --background: 0 0% 100%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
@@ -84,6 +87,7 @@
   }
 
   .dark {
+    /* Pure black for dark mode */
     --background: 0 0% 0%;
     --foreground: 210 20% 98%;
     --card: 0 0% 8%;
@@ -148,6 +152,11 @@
   html {
     scroll-behavior: smooth;
     overflow-x: hidden;
+    background-color: #ffffff;
+  }
+
+  html.dark {
+    background-color: #000000;
   }
 
   body {
@@ -157,6 +166,17 @@
     overflow-x: hidden;
     width: 100%;
     min-height: 100vh;
+  }
+
+  /* Force white in light mode, black in dark - override any conflicts */
+  html:not(.dark) body,
+  html:not(.dark) main {
+    background-color: #ffffff !important;
+  }
+
+  html.dark body,
+  html.dark main {
+    background-color: #000000 !important;
   }
 }
 

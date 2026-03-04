@@ -104,14 +104,22 @@ const { choices } = await response.json();`
   ];
 
   return (
-    <section id="developers" className="py-10 lg:py-14 relative overflow-hidden w-full bg-background dark:bg-transparent">
-      <div className="absolute inset-0" style={{
-            backgroundImage: `
-              linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px)
-            `,
-            backgroundSize: "50px 50px",
-          }} >  </div>
+    <section id="developers" className="py-10 lg:py-14 relative overflow-hidden w-full bg-white dark:bg-transparent">
+      {/* Grid - Light: dark lines | Dark: white lines */}
+      <div className="absolute inset-0 dark:hidden opacity-[0.4]" style={{
+        backgroundImage: `
+          linear-gradient(rgba(0, 0, 0, 0.06) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0, 0, 0, 0.06) 1px, transparent 1px)
+        `,
+        backgroundSize: "50px 50px",
+      }} />
+      <div className="absolute inset-0 hidden dark:block opacity-[0.08]" style={{
+        backgroundImage: `
+          linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px)
+        `,
+        backgroundSize: "50px 50px",
+      }} />
       {/* Animated Gradient Orbs - Theme Aware */}
       <motion.div
         className="absolute top-1/4 right-1/4 w-[400px] h-[400px] rounded-full blur-[100px] opacity-10 dark:opacity-15"

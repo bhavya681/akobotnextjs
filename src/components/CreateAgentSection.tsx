@@ -154,35 +154,23 @@ const CreateAgentSection = () => {
 
   return (
     <TooltipProvider>
-      <section className="py-24 lg:py-32 relative overflow-hidden w-full bg-gradient-to-b from-background to-muted/20 dark:bg-black">
-        {/* Deep Black Base - Only for Dark Mode */}
-        <div className="absolute inset-0" style={{
-            backgroundImage: `
-              linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px)
-            `,
-            backgroundSize: "50px 50px",
-          }} ></div>
-        {/* Subtle Grid Pattern - Light Mode */}
-        <div className="absolute inset-0 opacity-[0.03] dark:hidden">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `
-              linear-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(0, 0, 0, 0.1) 1px, transparent 1px)
-            `,
-            backgroundSize: "50px 50px",
-          }} />
-        </div>
-        {/* Subtle Grid Pattern - Dark Mode */}
-        <div className="absolute inset-0 opacity-8 hidden dark:block">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `
-              linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px)
-            `,
-            backgroundSize: "50px 50px",
-          }} />
-        </div>
+      <section className="py-24 lg:py-32 relative overflow-hidden w-full bg-white dark:bg-transparent">
+        {/* Grid - Light Mode: dark lines on light bg */}
+        <div className="absolute inset-0 dark:hidden opacity-[0.4]" style={{
+          backgroundImage: `
+            linear-gradient(rgba(0, 0, 0, 0.06) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 0, 0, 0.06) 1px, transparent 1px)
+          `,
+          backgroundSize: "50px 50px",
+        }} />
+        {/* Grid - Dark Mode: white lines on dark bg */}
+        <div className="absolute inset-0 hidden dark:block opacity-[0.08]" style={{
+          backgroundImage: `
+            linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px)
+          `,
+          backgroundSize: "50px 50px",
+        }} />
 
         <div className="container mx-auto px-4 lg:px-8 relative z-10">
           {/* Header */}
@@ -259,7 +247,7 @@ const CreateAgentSection = () => {
                       onChange={(e) => setAgentDescription(e.target.value)}
                       placeholder="Describe agent personality (e.g., 'Handle Shopify support tickets')"
                       rows={4}
-                      className="w-full min-h-[104px] px-4 py-3.5 rounded-xl bg-black/95 text-foreground placeholder:text-muted-foreground/60 border border-white/10 focus:outline-none focus:ring-2 focus:ring-primary/60 focus:border-primary/60 transition-all duration-300 resize-none text-sm leading-relaxed"
+                      className="w-full min-h-[104px] px-4 py-3.5 rounded-xl bg-secondary/50 dark:bg-black/95 text-foreground placeholder:text-muted-foreground/60 border border-border dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-primary/60 focus:border-primary/60 transition-all duration-300 resize-none text-sm leading-relaxed"
                     />
                   </div>
 
@@ -361,7 +349,7 @@ const CreateAgentSection = () => {
                     animate={{ backgroundPosition: ['0% 0%', '100% 100%', '0% 0%'] }}
                     transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
                   />
-                  <div className="absolute inset-[2px] rounded-3xl bg-gradient-to-br from-green-100 to-emerald-100" style={{ borderRadius: '22px' }} />
+                  <div className="absolute inset-[2px] rounded-3xl bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-100 dark:to-emerald-100" style={{ borderRadius: '22px' }} />
                   <div className="relative rounded-2xl overflow-hidden shadow-xl aspect-[21/9] sm:aspect-[1.5/1] flex flex-col bg-gray-900" style={{ borderRadius: '16px' }}>
                     <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover z-0 opacity-100">
                       <source src="/feeds/video19.mp4" type="video/mp4" />

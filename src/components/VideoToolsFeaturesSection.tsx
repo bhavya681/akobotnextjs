@@ -42,15 +42,22 @@ const VideoToolsFeaturesSection = () => {
   }, [isPaused]);
 
   return (
-    <section className="relative py-12 w-full overflow-x-clip bg-background">
-      {/* Background Grid - Kept exactly as requested */}
-      <div className="absolute inset-0" style={{
-            backgroundImage: `
-              linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px)
-            `,
-            backgroundSize: "50px 50px",
-          }} ></div>
+    <section className="relative py-12 w-full overflow-x-clip bg-white dark:bg-transparent">
+      {/* Grid - Light: dark lines | Dark: white lines */}
+      <div className="absolute inset-0 dark:hidden opacity-[0.4]" style={{
+        backgroundImage: `
+          linear-gradient(rgba(0, 0, 0, 0.06) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0, 0, 0, 0.06) 1px, transparent 1px)
+        `,
+        backgroundSize: "50px 50px",
+      }} />
+      <div className="absolute inset-0 hidden dark:block opacity-[0.08]" style={{
+        backgroundImage: `
+          linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px)
+        `,
+        backgroundSize: "50px 50px",
+      }} />
       <div className="container mx-auto relative z-10 px-4">
         <div className="mb-10">
           <motion.div
@@ -101,7 +108,7 @@ const VideoCardItem = ({ model }: { model: any }) => {
     <div
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className="group relative flex-shrink-0 w-[280px] md:w-[340px] h-[400px] rounded-[2rem] overflow-hidden bg-black border border-white/5 transition-all duration-700 hover:border-primary/40 hover:-translate-y-2"
+      className="group relative flex-shrink-0 w-[280px] md:w-[340px] h-[400px] rounded-[2rem] overflow-hidden bg-card dark:bg-black border border-border/50 dark:border-white/5 transition-all duration-700 hover:border-primary/40 hover:-translate-y-2"
     >
       {/* Video Content - Slightly zoomed for "fill" effect */}
       <video
@@ -118,16 +125,16 @@ const VideoCardItem = ({ model }: { model: any }) => {
       
       {/* Card Content */}
       <div className="absolute inset-x-0 bottom-0 p-5 z-30">
-        <div className="relative p-5 rounded-[1.5rem] bg-white/5 backdrop-blur-md border border-white/10 overflow-hidden transition-all duration-500 group-hover:bg-white/10 group-hover:border-primary/30">
+        <div className="relative p-5 rounded-[1.5rem] bg-white/80 dark:bg-white/5 backdrop-blur-md border border-border/50 dark:border-white/10 overflow-hidden transition-all duration-500 group-hover:bg-white/90 dark:group-hover:bg-white/10 group-hover:border-primary/30">
           
           {/* Animated Glow Dot */}
           <div className="absolute top-3 right-3 w-1.5 h-1.5 rounded-full bg-primary opacity-50 group-hover:animate-ping" />
 
-          <h3 className="text-xl font-bold text-white mb-1 group-hover:text-primary transition-colors duration-300">
+          <h3 className="text-xl font-bold text-foreground dark:text-white mb-1 group-hover:text-primary transition-colors duration-300">
             {model.title}
           </h3>
           
-          <p className="text-xs md:text-sm text-gray-400 leading-snug line-clamp-2 group-hover:text-gray-200 transition-colors">
+          <p className="text-xs md:text-sm text-muted-foreground dark:text-gray-400 leading-snug line-clamp-2 group-hover:text-foreground/80 dark:group-hover:text-gray-200 transition-colors">
             {model.description}
           </p>
 

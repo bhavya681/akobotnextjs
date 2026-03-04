@@ -41,7 +41,7 @@ const ShowcaseSection = () => {
   ];
 
   return (
-    <section className="py-14 lg:py-12 relative overflow-hidden w-full bg-white dark:bg-black/80">
+    <section className="py-14 lg:py-12 relative overflow-hidden w-full bg-white dark:bg-transparent">
       <div className="absolute inset-0 dark:hidden" style={{
             backgroundImage: `
               linear-gradient(rgba(0, 0, 0, 0.06) 1px, transparent 1px),

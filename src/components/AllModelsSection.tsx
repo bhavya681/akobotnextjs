@@ -84,14 +84,23 @@ const AllModelsSection = () => {
 
   return (
     
-    <section className="relative overflow-hidden w-full py-8 lg:py-12 bg-background">
-      <div className="absolute inset-0" style={{
-            backgroundImage: `
-              linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px)
-            `,
-            backgroundSize: "50px 50px",
-          }} >
+    <section className="relative overflow-hidden w-full py-8 lg:py-12 bg-white dark:bg-transparent">
+      {/* Grid - Light: dark lines | Dark: white lines */}
+      <div className="absolute inset-0 dark:hidden opacity-[0.4]" style={{
+        backgroundImage: `
+          linear-gradient(rgba(0, 0, 0, 0.06) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0, 0, 0, 0.06) 1px, transparent 1px)
+        `,
+        backgroundSize: "50px 50px",
+      }} />
+      <div className="absolute inset-0 hidden dark:block opacity-[0.08]" style={{
+        backgroundImage: `
+          linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px)
+        `,
+        backgroundSize: "50px 50px",
+      }} />
+      <div className="absolute inset-0 pointer-events-none">
         <motion.div
           className="absolute inset-0 opacity-10 dark:opacity-20"
           style={{
@@ -170,8 +179,8 @@ const AllModelsSection = () => {
           </div>
 
           <div className="relative overflow-hidden rounded-3xl bg-card/30 dark:bg-black/20 backdrop-blur-sm border border-border/30 dark:border-white/10 p-4">
-            <div className="absolute left-0 top-0 bottom-0 w-32 md:w-40 bg-gradient-to-r from-background via-background/90 to-transparent dark:from-[#0a0a0f] dark:via-[#0a0a0f]/90 z-10 pointer-events-none" />
-            <div className="absolute right-0 top-0 bottom-0 w-32 md:w-40 bg-gradient-to-l from-background via-background/90 to-transparent dark:from-[#0a0a0f] dark:via-[#0a0a0f]/90 z-10 pointer-events-none" />
+            <div className="absolute left-0 top-0 bottom-0 w-32 md:w-40 bg-gradient-to-r from-white via-white/90 to-transparent dark:from-black dark:via-black/90 z-10 pointer-events-none" />
+            <div className="absolute right-0 top-0 bottom-0 w-32 md:w-40 bg-gradient-to-l from-white via-white/90 to-transparent dark:from-black dark:via-black/90 z-10 pointer-events-none" />
             
             <div
               ref={scrollRef}

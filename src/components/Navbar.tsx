@@ -154,9 +154,9 @@ const Navbar = () => {
             ease: [0.4, 0, 0.2, 1],
           }}
         >
-          {/* Glass Background with Blur - matches dashboard sidebar gradient */}
+          {/* Glass Background with Blur - theme-aware gradient */}
           <motion.div
-            className="relative overflow-hidden bg-gradient-to-r from-purple-700 via-purple-800 to-purple-950 backdrop-blur-xl border border-purple-500/40"
+            className="relative overflow-hidden bg-gradient-to-r from-purple-600 via-purple-700 to-purple-900 dark:from-purple-700 dark:via-purple-800 dark:to-purple-950 backdrop-blur-xl border border-purple-400/50 dark:border-purple-500/40"
             animate={{
               backdropFilter: "blur(20px) saturate(180%)",
               borderRadius: isScrolled || isOpen ? "20px" : "9999px",
@@ -216,8 +216,7 @@ const Navbar = () => {
                     <AnimatePresence mode="wait">
                       <motion.img 
                         key={theme}
-                        // src={theme === "dark" ? "/ako_dark.png" : "/ako.png"} 
-                        src={"/ako_dark.png"} 
+                        src={theme === "dark" ? "/ako_dark.png" : "/ako.png"} 
                         alt="AKO.ai Logo" 
                         animate={{
                           opacity: 1,
@@ -485,7 +484,7 @@ const Navbar = () => {
             className="fixed top-16 sm:top-20 left-2 right-2 sm:left-4 sm:right-4 sm:hidden z-40"
           >
             <motion.div
-              className="backdrop-blur-2xl dark:bg-card/95 bg-white/95 border border-border rounded-2xl shadow-2xl overflow-hidden relative"
+              className="backdrop-blur-2xl bg-card/95 dark:bg-card/95 border border-border rounded-2xl shadow-2xl overflow-hidden relative"
               initial={{ borderRadius: "9999px" }}
               animate={{ borderRadius: "20px" }}
               transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
@@ -495,7 +494,7 @@ const Navbar = () => {
               <div className="relative z-10 px-4 sm:px-6 py-4 sm:py-6 space-y-3 sm:space-y-4 max-h-[85vh] overflow-y-auto">
                 {/* Mobile Models Menu */}
                 <div>
-                  <div className="text-sm font-semibold text-white mb-3 px-2">Models</div>
+                  <div className="text-sm font-semibold text-foreground dark:text-white mb-3 px-2">Models</div>
                   <div className="space-y-1">
                     {modelsMenuItems.map((item) => {
                       const Icon = item.icon;
@@ -508,14 +507,14 @@ const Navbar = () => {
                             setIsOpen(false);
                             router.push(item.path);
                           }}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white hover:text-white/90 hover:bg-white/10 transition-colors"
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground dark:text-white hover:text-foreground dark:hover:text-white/90 hover:bg-accent/50 dark:hover:bg-white/10 transition-colors"
                           whileHover={{ x: 4 }}
                           whileTap={{ scale: 0.98 }}
                         >
-                          <Icon className="w-4 h-4 text-white" />
+                          <Icon className="w-4 h-4 text-primary dark:text-white" />
                           <div className="flex flex-col">
-                            <span className="font-medium text-white">{item.name}</span>
-                            <span className="text-xs text-white/70">{item.description}</span>
+                            <span className="font-medium text-foreground dark:text-white">{item.name}</span>
+                            <span className="text-xs text-muted-foreground dark:text-white/70">{item.description}</span>
                           </div>
                         </motion.a>
                       );
@@ -525,7 +524,7 @@ const Navbar = () => {
 
                 {/* Mobile Features Menu */}
                 <div>
-                  <div className="text-sm font-semibold text-white mb-3 px-2">Features</div>
+                  <div className="text-sm font-semibold text-foreground dark:text-white mb-3 px-2">Features</div>
                   <div className="space-y-1">
                     {featuresMenuItems.map((item) => {
                       const Icon = item.icon;
@@ -538,14 +537,14 @@ const Navbar = () => {
                             setIsOpen(false);
                             router.push(item.path);
                           }}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white hover:text-white/90 hover:bg-white/10 transition-colors"
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground dark:text-white hover:text-foreground dark:hover:text-white/90 hover:bg-accent/50 dark:hover:bg-white/10 transition-colors"
                           whileHover={{ x: 4 }}
                           whileTap={{ scale: 0.98 }}
                         >
-                          <Icon className="w-4 h-4 text-white" />
+                          <Icon className="w-4 h-4 text-primary dark:text-white" />
                           <div className="flex flex-col">
-                            <span className="font-medium text-white">{item.name}</span>
-                            <span className="text-xs text-white/70">{item.description}</span>
+                            <span className="font-medium text-foreground dark:text-white">{item.name}</span>
+                            <span className="text-xs text-muted-foreground dark:text-white/70">{item.description}</span>
                           </div>
                         </motion.a>
                       );
@@ -561,7 +560,7 @@ const Navbar = () => {
                         setIsOpen(false);
                         router.push(link.path!);
                       }}
-                      className="block w-full text-left px-3 py-2.5 rounded-lg text-sm text-white hover:text-white/90 hover:bg-white/10 transition-colors"
+                      className="block w-full text-left px-3 py-2.5 rounded-lg text-sm text-foreground dark:text-white hover:text-foreground dark:hover:text-white/90 hover:bg-accent/50 dark:hover:bg-white/10 transition-colors"
                       whileHover={{ x: 4 }}
                       whileTap={{ scale: 0.98 }}
                     >
@@ -572,7 +571,7 @@ const Navbar = () => {
                       key={link.name}
                       href={link.href}
                       onClick={() => setIsOpen(false)}
-                      className="block px-3 py-2.5 rounded-lg text-sm text-white hover:text-white/90 hover:bg-white/10 transition-colors"
+                      className="block px-3 py-2.5 rounded-lg text-sm text-foreground dark:text-white hover:text-foreground dark:hover:text-white/90 hover:bg-accent/50 dark:hover:bg-white/10 transition-colors"
                       whileHover={{ x: 4 }}
                       whileTap={{ scale: 0.98 }}
                     >
@@ -582,7 +581,7 @@ const Navbar = () => {
                 )}
                 
                 {/* Mobile Theme Toggle */}
-                <div className="pt-4 border-t border-white/20">
+                <div className="pt-4 border-t border-border dark:border-white/20">
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -590,13 +589,13 @@ const Navbar = () => {
                           onClick={toggleTheme}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                          className="relative flex items-center justify-center w-full py-3 rounded-lg text-white hover:text-white/90 hover:bg-white/10 transition-all"
+                          className="relative flex items-center justify-center w-full py-3 rounded-lg text-foreground dark:text-white hover:text-foreground dark:hover:text-white/90 hover:bg-accent/50 dark:hover:bg-white/10 transition-all"
                         >
                           <div className="flex items-center gap-3">
                             {theme === "dark" ? (
-                              <Sun className="w-5 h-5 stroke-2 text-white" />
+                              <Sun className="w-5 h-5 stroke-2 text-foreground dark:text-white" />
                             ) : (
-                              <Moon className="w-5 h-5 stroke-2 text-white" />
+                              <Moon className="w-5 h-5 stroke-2 text-foreground dark:text-white" />
                             )}
                             <span className="font-medium">
                               {theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
@@ -621,17 +620,17 @@ const Navbar = () => {
                   </TooltipProvider>
                 </div>
                 
-                <div className="pt-4 border-t border-white/20 space-y-2">
+                <div className="pt-4 border-t border-border dark:border-white/20 space-y-2">
                   {isAuthenticated ? (
                     <>
                       <div className="px-3 py-2 mb-2">
-                        <p className="text-sm font-medium text-white">{user?.username || user?.email || user?.role || 'User'}</p>
-                        <p className="text-xs text-white/70 truncate">{user?.email || `ID: ${user?.id?.slice(0, 8) || 'N/A'}...`}</p>
+                        <p className="text-sm font-medium text-foreground dark:text-white">{user?.username || user?.email || user?.role || 'User'}</p>
+                        <p className="text-xs text-muted-foreground dark:text-white/70 truncate">{user?.email || `ID: ${user?.id?.slice(0, 8) || 'N/A'}...`}</p>
                       </div>
                       <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                         <Button
                           variant="ghost"
-                          className="w-full justify-center text-white hover:text-white/90 hover:bg-white/10"
+                          className="w-full justify-center text-foreground dark:text-white hover:text-foreground dark:hover:text-white/90 hover:bg-accent/50 dark:hover:bg-white/10"
                           onClick={() => {
                             setIsOpen(false);
                             router.push("/dashboard");
@@ -643,7 +642,7 @@ const Navbar = () => {
                       <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                         <Button
                           variant="ghost"
-                          className="w-full justify-center text-white hover:text-white/90 hover:bg-white/10"
+                          className="w-full justify-center text-foreground dark:text-white hover:text-foreground dark:hover:text-white/90 hover:bg-accent/50 dark:hover:bg-white/10"
                           onClick={() => {
                             setIsOpen(false);
                             router.push("/dashboard/account");
@@ -655,7 +654,7 @@ const Navbar = () => {
                       <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                         <Button
                           variant="outline"
-                          className="w-full justify-center text-white hover:bg-white/10 hover:text-white border-white/20"
+                          className="w-full justify-center text-foreground dark:text-white hover:bg-accent/50 dark:hover:bg-white/10 hover:text-foreground dark:hover:text-white border-border dark:border-white/20"
                           onClick={async () => {
                             setIsOpen(false);
                             try {
@@ -666,7 +665,7 @@ const Navbar = () => {
                             }
                           }}
                         >
-                          <LogOut className="w-4 h-4 mr-2 text-white" />
+                          <LogOut className="w-4 h-4 mr-2 text-foreground dark:text-white" />
                           Logout
                         </Button>
                       </motion.div>
@@ -676,7 +675,7 @@ const Navbar = () => {
                   <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                     <Button
                       variant="ghost"
-                      className="w-full justify-center text-white hover:text-white/90 hover:bg-white/10"
+                      className="w-full justify-center text-foreground dark:text-white hover:text-foreground dark:hover:text-white/90 hover:bg-accent/50 dark:hover:bg-white/10"
                       onClick={() => {
                         setIsOpen(false);
                         router.push("/auth/sign-in");

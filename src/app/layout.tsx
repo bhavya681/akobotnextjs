@@ -28,7 +28,7 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){var s=localStorage.getItem("theme");var r=document.documentElement;if(s==="dark")r.classList.add("dark");else{r.classList.remove("dark");if(!s)localStorage.setItem("theme","light")}})();`,
+            __html: `(function(){var s=localStorage.getItem("theme");var r=document.documentElement;if(s==="dark"){r.classList.add("dark")}else{r.classList.remove("dark");if(!s)localStorage.setItem("theme","light")}})();`,
           }}
         />
         <Providers>{children}</Providers>

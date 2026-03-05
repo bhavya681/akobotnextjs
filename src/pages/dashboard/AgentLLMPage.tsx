@@ -28,8 +28,10 @@ import {
   Clock,
   ArrowRight,
   Globe,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
-import { moduleAPI, providerAPI, SARVAM_VOICE_WS_URL } from "@/lib/api";
+import { moduleAPI, providerAPI, SARVAM_VOICE_WS_URL, audioAPI, type VoiceItem } from "@/lib/api";
 import { toast } from "sonner";
 interface ChatMessage {
   id: string;
@@ -45,6 +47,7 @@ const contentTypes = [
   { id: "doc", label: "Doc", icon: FileText, isSelected: false },
   { id: "code", label: "</> Code", icon: Code, isSelected: false },
   { id: "video", label: "Video clip", icon: Video, isSelected: false, isPremium: true },
+  { id: "audio", label: "Audio", icon: Volume2, isSelected: false },
 ];
 
 const availableAgents = [
@@ -83,6 +86,10 @@ const AgentLLMPage = () => {
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const ttsChunksRef = useRef<string[]>([]);
   const [isVoiceActive, setIsVoiceActive] = useState(false);
+  const [ttsVoices, setTtsVoices] = useState<VoiceItem[]>([]);
+  const [selectedVoice, setSelectedVoice] = useState<string>("Tara");
+  const [playingTtsId, setPlayingTtsId] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const agentMoods = [
     { id: "professional", label: "Professional" },
@@ -115,6 +122,26 @@ const AgentLLMPage = () => {
   // Fetch available models on mount
   useEffect(() => {
     fetchModels();
+  }, []);
+
+  // Fetch TTS voices on mount
+  useEffect(() => {
+    const loadVoices = async () => {
+      try {
+        const data = await audioAPI.getVoices();
+        const list = Array.isArray(data) ? data : (data as { voices?: VoiceItem[] }).voices ?? [];
+        setTtsVoices(list);
+        if (list.length > 0 && !selectedVoice) {
+          const first = list[0];
+          const id = typeof first === "object" && first !== null && "voice_id" in first ? (first as VoiceItem).voice_id : String(first);
+          setSelectedVoice(id);
+        }
+      } catch {
+        // Fallback voices if API fails
+        setTtsVoices([{ voice_id: "Tara" }, { voice_id: "Leah" }, { voice_id: "Jess" }, { voice_id: "Mia" }, { voice_id: "Zoe" }, { voice_id: "Leo" }, { voice_id: "Dan" }, { voice_id: "Zac" }]);
+      }
+    };
+    loadVoices();
   }, []);
 
   const fetchModels = async () => {
@@ -267,6 +294,32 @@ const AgentLLMPage = () => {
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
+
+      // Auto-play TTS when Audio content type is selected
+      if (selectedContentType === "audio" && reply.trim()) {
+        setTimeout(async () => {
+          try {
+            const res = await audioAPI.textToSpeech({
+              prompt: reply.trim(),
+              voice_id: selectedVoice,
+              language: "american english",
+              speed: 1,
+              emotion: ["Tara", "Leah", "Jess", "Mia", "Zoe", "Leo", "Dan", "Zac"].includes(selectedVoice),
+            });
+            const url = (res as { url?: string })?.url;
+            if (url) {
+              const audio = new Audio(url);
+              audioRef.current = audio;
+              setPlayingTtsId(assistantMessage.id);
+              audio.onended = () => setPlayingTtsId(null);
+              audio.onerror = () => setPlayingTtsId(null);
+              await audio.play();
+            }
+          } catch {
+            // Silent fail for auto-play
+          }
+        }, 300);
+      }
     } catch (error: any) {
       console.error("Chat error:", error);
       const errorMessage: ChatMessage = {
@@ -390,11 +443,48 @@ const AgentLLMPage = () => {
   useEffect(() => {
     return () => {
       stopVoice();
+      audioRef.current?.pause();
     };
   }, [stopVoice]);
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const handlePlayTts = async (messageId: string, text: string) => {
+    if (playingTtsId) {
+      audioRef.current?.pause();
+      setPlayingTtsId(null);
+      if (playingTtsId === messageId) return;
+    }
+    try {
+      setPlayingTtsId(messageId);
+      const res = await audioAPI.textToSpeech({
+        prompt: text,
+        voice_id: selectedVoice,
+        language: "american english",
+        speed: 1,
+        emotion: ["Tara", "Leah", "Jess", "Mia", "Zoe", "Leo", "Dan", "Zac"].includes(selectedVoice),
+      });
+      const url = (res as { url?: string })?.url;
+      if (!url) throw new Error("No audio URL returned");
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => setPlayingTtsId(null);
+      audio.onerror = () => {
+        toast.error("Failed to play audio");
+        setPlayingTtsId(null);
+      };
+      await audio.play();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to generate speech");
+      setPlayingTtsId(null);
+    }
+  };
+
+  const stopTts = () => {
+    audioRef.current?.pause();
+    setPlayingTtsId(null);
   };
 
   const hasMessages = messages.length > 0;
@@ -541,6 +631,15 @@ const AgentLLMPage = () => {
                           {message.role === "assistant" ? "AEKO" : "You"}
                         </span>
                         <span className="text-[10px] text-gray-500 dark:text-gray-600 transition-colors duration-300">{formatTime(message.timestamp)}</span>
+                        {message.role === "assistant" && message.content && (
+                          <button
+                            onClick={() => playingTtsId === message.id ? stopTts() : handlePlayTts(message.id, message.content)}
+                            className="p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                            title={playingTtsId === message.id ? "Stop" : "Listen"}
+                          >
+                            {playingTtsId === message.id ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                          </button>
+                        )}
                       </div>
                       <div className={`rounded-2xl px-5 py-3.5 shadow-sm transition-colors duration-300 ${
                         message.role === "user" 
@@ -684,6 +783,23 @@ const AgentLLMPage = () => {
                         Agents
                         <ChevronDown className="w-3 h-3 text-gray-500 dark:text-gray-400 transition-colors duration-300" />
                       </button>
+
+                      {/* Voice selector - shown when Audio mode */}
+                      {selectedContentType === "audio" && (
+                        <div className="relative group">
+                          <select
+                            value={selectedVoice}
+                            onChange={(e) => setSelectedVoice(e.target.value)}
+                            className="appearance-none bg-gray-100 dark:bg-[#242630] text-gray-700 dark:text-gray-300 text-xs font-medium px-4 py-2 pr-8 rounded-lg border border-gray-200 dark:border-white/5 focus:outline-none cursor-pointer hover:bg-gray-200 dark:hover:bg-[#2a2c38] transition-colors duration-300"
+                          >
+                            {ttsVoices.map((v) => {
+                              const id = typeof v === "object" && v !== null && "voice_id" in v ? (v as VoiceItem).voice_id : String(v);
+                              return <option key={id} value={id}>{id}</option>;
+                            })}
+                          </select>
+                          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-500 dark:text-gray-400 pointer-events-none transition-colors duration-300" />
+                        </div>
+                      )}
                     </div>
                     
                     {/* Right Group */}

@@ -708,6 +708,55 @@ export const imageAPI = {
   },
 };
 
+// Audio API (TTS - ModelsLab)
+export interface VoiceItem {
+  voice_id: string;
+  gender?: string;
+  language?: string;
+  emotion?: boolean;
+  sound_clip?: string;
+}
+
+export const audioAPI = {
+  /** GET /api/audio/voices - List all available TTS voices */
+  getVoices: async (params?: { language?: string; refresh?: boolean }) => {
+    const qs = new URLSearchParams();
+    if (params?.language) qs.set("language", params.language);
+    if (params?.refresh) qs.set("refresh", "true");
+    const query = qs.toString();
+    const response = await apiRequest(`/api/audio/voices${query ? `?${query}` : ""}`, {
+      method: "GET",
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error((data as { message?: string }).message || "Failed to fetch voices");
+    return data as VoiceItem[] | { voices?: VoiceItem[] };
+  },
+
+  /** POST /api/audio/text-to-speech - Convert text to speech */
+  textToSpeech: async (body: {
+    prompt: string;
+    voice_id: string;
+    language?: string;
+    speed?: number;
+    emotion?: boolean;
+  }) => {
+    const response = await apiRequest("/api/audio/text-to-speech", {
+      method: "POST",
+      body: JSON.stringify({
+        prompt: body.prompt,
+        voice_id: body.voice_id,
+        language: body.language ?? "american english",
+        speed: body.speed ?? 1,
+        emotion: body.emotion ?? false,
+      }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error((data as { message?: string }).message || "TTS generation failed");
+    const d = data as { url?: string; audio_url?: string; data?: { url?: string } };
+    return { url: d.url ?? d.audio_url ?? d.data?.url };
+  },
+};
+
 // Crawl API
 export const crawlAPI = {
   crawlWebsite: async (url: string) => {

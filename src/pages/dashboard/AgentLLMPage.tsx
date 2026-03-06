@@ -26,13 +26,25 @@ import {
   ThumbsUp,
   ThumbsDown,
   Clock,
+  Loader2,
   ArrowRight,
   Globe,
   Volume2,
   VolumeX,
+  Users,
+  Contact,
+  TrendingUp,
+  Headphones,
+  Settings,
 } from "lucide-react";
 import { moduleAPI, providerAPI, SARVAM_VOICE_WS_URL, audioAPI, type VoiceItem } from "@/lib/api";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 interface ChatMessage {
   id: string;
   role: "user" | "assistant";
@@ -51,10 +63,12 @@ const contentTypes = [
 ];
 
 const availableAgents = [
-  { id: "1", name: "Cnergee" },
-  { id: "2", name: "Instagram" },
-  { id: "3", name: "Yamaha Motor" },
-  { id: "4", name: "Standard Agent" },
+  { id: "general", name: "General Assistant", icon: Bot },
+  { id: "hr", name: "HR", icon: Users },
+  { id: "crm", name: "CRM", icon: Contact },
+  { id: "sales", name: "Sales", icon: TrendingUp },
+  { id: "support", name: "Support", icon: Headphones },
+  { id: "it", name: "IT", icon: Settings },
 ];
 
 interface ModelInfo {
@@ -74,7 +88,7 @@ const AgentLLMPage = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectedContentType, setSelectedContentType] = useState("design");
-  const [selectedAgent, setSelectedAgent] = useState<string>("4"); // Default to Standard
+  const [selectedAgent, setSelectedAgent] = useState<string>("general");
   const [agentMood, setAgentMood] = useState("Professional");
   const [availableModels, setAvailableModels] = useState<ModelInfo[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>("");
@@ -89,7 +103,26 @@ const AgentLLMPage = () => {
   const [ttsVoices, setTtsVoices] = useState<VoiceItem[]>([]);
   const [selectedVoice, setSelectedVoice] = useState<string>("Tara");
   const [playingTtsId, setPlayingTtsId] = useState<string | null>(null);
+  const [ttsLoadingId, setTtsLoadingId] = useState<string | null>(null);
+  const [voicesLoading, setVoicesLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  /** Normalize voices from API: array, { voices }, or { "language": VoiceItem[] } */
+  const normalizeVoices = useCallback((data: unknown): VoiceItem[] => {
+    const isVoice = (v: unknown): v is VoiceItem =>
+      !!v && typeof v === "object" && "voice_id" in (v as Record<string, unknown>);
+    if (Array.isArray(data)) return data.filter(isVoice);
+    if (data && typeof data === "object") {
+      const obj = data as Record<string, unknown>;
+      if (Array.isArray(obj.voices)) return obj.voices.filter(isVoice);
+      const flat: VoiceItem[] = [];
+      for (const val of Object.values(obj)) {
+        if (Array.isArray(val)) flat.push(...val.filter(isVoice));
+      }
+      if (flat.length > 0) return flat;
+    }
+    return [];
+  }, []);
 
   const agentMoods = [
     { id: "professional", label: "Professional" },
@@ -127,22 +160,23 @@ const AgentLLMPage = () => {
   // Fetch TTS voices on mount
   useEffect(() => {
     const loadVoices = async () => {
+      setVoicesLoading(true);
       try {
         const data = await audioAPI.getVoices();
-        const list = Array.isArray(data) ? data : (data as { voices?: VoiceItem[] }).voices ?? [];
+        const list = normalizeVoices(data);
         setTtsVoices(list);
-        if (list.length > 0 && !selectedVoice) {
-          const first = list[0];
-          const id = typeof first === "object" && first !== null && "voice_id" in first ? (first as VoiceItem).voice_id : String(first);
-          setSelectedVoice(id);
+        if (list.length > 0) {
+          const hasCurrent = list.some((v) => v.voice_id === selectedVoice);
+          if (!hasCurrent) setSelectedVoice(list[0].voice_id);
         }
       } catch {
-        // Fallback voices if API fails
         setTtsVoices([{ voice_id: "Tara" }, { voice_id: "Leah" }, { voice_id: "Jess" }, { voice_id: "Mia" }, { voice_id: "Zoe" }, { voice_id: "Leo" }, { voice_id: "Dan" }, { voice_id: "Zac" }]);
+      } finally {
+        setVoicesLoading(false);
       }
     };
     loadVoices();
-  }, []);
+  }, [normalizeVoices]);
 
   const fetchModels = async () => {
     try {
@@ -297,26 +331,31 @@ const AgentLLMPage = () => {
 
       // Auto-play TTS when Audio content type is selected
       if (selectedContentType === "audio" && reply.trim()) {
+        const msgId = assistantMessage.id;
+        setTtsLoadingId(msgId);
         setTimeout(async () => {
           try {
+            const { language, emotion } = getVoiceConfig();
             const res = await audioAPI.textToSpeech({
               prompt: reply.trim(),
               voice_id: selectedVoice,
-              language: "american english",
+              language,
               speed: 1,
-              emotion: ["Tara", "Leah", "Jess", "Mia", "Zoe", "Leo", "Dan", "Zac"].includes(selectedVoice),
+              emotion,
             });
             const url = (res as { url?: string })?.url;
             if (url) {
               const audio = new Audio(url);
               audioRef.current = audio;
-              setPlayingTtsId(assistantMessage.id);
+              setPlayingTtsId(msgId);
               audio.onended = () => setPlayingTtsId(null);
               audio.onerror = () => setPlayingTtsId(null);
               await audio.play();
             }
           } catch {
-            // Silent fail for auto-play
+            toast.error("Could not play audio response");
+          } finally {
+            setTtsLoadingId(null);
           }
         }, 300);
       }
@@ -451,25 +490,38 @@ const AgentLLMPage = () => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const getVoiceConfig = useCallback(() => {
+    const v = ttsVoices.find((x) => x.voice_id === selectedVoice);
+    return {
+      language: v?.language ?? "american english",
+      emotion: v?.emotion ?? ["Tara", "Leah", "Jess", "Mia", "Zoe", "Leo", "Dan", "Zac"].includes(selectedVoice),
+    };
+  }, [ttsVoices, selectedVoice]);
+
   const handlePlayTts = async (messageId: string, text: string) => {
+    if (playingTtsId === messageId) {
+      stopTts();
+      return;
+    }
     if (playingTtsId) {
       audioRef.current?.pause();
       setPlayingTtsId(null);
-      if (playingTtsId === messageId) return;
     }
+    setTtsLoadingId(messageId);
     try {
-      setPlayingTtsId(messageId);
+      const { language, emotion } = getVoiceConfig();
       const res = await audioAPI.textToSpeech({
         prompt: text,
         voice_id: selectedVoice,
-        language: "american english",
+        language,
         speed: 1,
-        emotion: ["Tara", "Leah", "Jess", "Mia", "Zoe", "Leo", "Dan", "Zac"].includes(selectedVoice),
+        emotion,
       });
       const url = (res as { url?: string })?.url;
       if (!url) throw new Error("No audio URL returned");
       const audio = new Audio(url);
       audioRef.current = audio;
+      setPlayingTtsId(messageId);
       audio.onended = () => setPlayingTtsId(null);
       audio.onerror = () => {
         toast.error("Failed to play audio");
@@ -478,7 +530,8 @@ const AgentLLMPage = () => {
       await audio.play();
     } catch (err: any) {
       toast.error(err?.message || "Failed to generate speech");
-      setPlayingTtsId(null);
+    } finally {
+      setTtsLoadingId(null);
     }
   };
 
@@ -566,12 +619,32 @@ const AgentLLMPage = () => {
                     <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-500 dark:text-gray-400 pointer-events-none transition-colors duration-300" />
                   </div>
                 )}
-                <button className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 text-sm transition-colors border border-gray-200 dark:border-white/5 flex items-center gap-2">
-                  <Bot className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                  <span className="font-medium">
-                    {availableAgents.find(a => a.id === selectedAgent)?.name || "Agent"}
-                  </span>
-                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 text-sm transition-colors border border-gray-200 dark:border-white/5 flex items-center gap-2">
+                      {(() => {
+                        const agent = availableAgents.find((a) => a.id === selectedAgent);
+                        const Icon = agent?.icon ?? Bot;
+                        return <Icon className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />;
+                      })()}
+                      <span className="font-medium">
+                        {availableAgents.find((a) => a.id === selectedAgent)?.name || "Agent"}
+                      </span>
+                      <ChevronDown className="w-3 h-3 text-gray-500 dark:text-gray-400" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    {availableAgents.map((agent) => {
+                      const Icon = agent.icon;
+                      return (
+                        <DropdownMenuItem key={agent.id} onClick={() => setSelectedAgent(agent.id)}>
+                          <Icon className="w-4 h-4 mr-3 text-muted-foreground" />
+                          {agent.name}
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </motion.div>
@@ -633,11 +706,18 @@ const AgentLLMPage = () => {
                         <span className="text-[10px] text-gray-500 dark:text-gray-600 transition-colors duration-300">{formatTime(message.timestamp)}</span>
                         {message.role === "assistant" && message.content && (
                           <button
-                            onClick={() => playingTtsId === message.id ? stopTts() : handlePlayTts(message.id, message.content)}
-                            className="p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
-                            title={playingTtsId === message.id ? "Stop" : "Listen"}
+                            onClick={() => (playingTtsId === message.id ? stopTts() : ttsLoadingId === message.id ? undefined : handlePlayTts(message.id, message.content))}
+                            disabled={ttsLoadingId === message.id}
+                            className="p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-purple-600 dark:hover:text-purple-400 transition-colors disabled:opacity-70 disabled:cursor-wait"
+                            title={ttsLoadingId === message.id ? "Generating..." : playingTtsId === message.id ? "Stop" : "Listen"}
                           >
-                            {playingTtsId === message.id ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                            {ttsLoadingId === message.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : playingTtsId === message.id ? (
+                              <VolumeX className="w-4 h-4" />
+                            ) : (
+                              <Volume2 className="w-4 h-4" />
+                            )}
                           </button>
                         )}
                       </div>
@@ -774,30 +854,51 @@ const AgentLLMPage = () => {
                         </button>
                       </div>
 
-                       {/* Agents Button */}
-                      <button 
-                         className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-[#242630] border border-gray-200 dark:border-white/5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-[#2a2c38] transition-all duration-300"
-                         onClick={() => toast.info("Agent selector")}
-                      >
-                        <Bot className="w-3.5 h-3.5" />
-                        Agents
-                        <ChevronDown className="w-3 h-3 text-gray-500 dark:text-gray-400 transition-colors duration-300" />
-                      </button>
+                       {/* Agents Dropdown */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-[#242630] border border-gray-200 dark:border-white/5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-[#2a2c38] transition-all duration-300">
+                            {(() => {
+                              const agent = availableAgents.find((a) => a.id === selectedAgent);
+                              const Icon = agent?.icon ?? Bot;
+                              return <Icon className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />;
+                            })()}
+                            <span>{availableAgents.find((a) => a.id === selectedAgent)?.name || "Agent"}</span>
+                            <ChevronDown className="w-3 h-3 text-gray-500 dark:text-gray-400 transition-colors duration-300" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-56">
+                          {availableAgents.map((agent) => {
+                            const Icon = agent.icon;
+                            return (
+                              <DropdownMenuItem key={agent.id} onClick={() => setSelectedAgent(agent.id)}>
+                                <Icon className="w-4 h-4 mr-3 text-muted-foreground" />
+                                {agent.name}
+                              </DropdownMenuItem>
+                            );
+                          })}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
 
-                      {/* Voice selector - shown when Audio mode */}
-                      {selectedContentType === "audio" && (
-                        <div className="relative group">
-                          <select
-                            value={selectedVoice}
-                            onChange={(e) => setSelectedVoice(e.target.value)}
-                            className="appearance-none bg-gray-100 dark:bg-[#242630] text-gray-700 dark:text-gray-300 text-xs font-medium px-4 py-2 pr-8 rounded-lg border border-gray-200 dark:border-white/5 focus:outline-none cursor-pointer hover:bg-gray-200 dark:hover:bg-[#2a2c38] transition-colors duration-300"
-                          >
-                            {ttsVoices.map((v) => {
-                              const id = typeof v === "object" && v !== null && "voice_id" in v ? (v as VoiceItem).voice_id : String(v);
-                              return <option key={id} value={id}>{id}</option>;
-                            })}
-                          </select>
-                          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-500 dark:text-gray-400 pointer-events-none transition-colors duration-300" />
+                      {/* Voice selector - shown when Audio mode or when assistant messages exist */}
+                      {(selectedContentType === "audio" || messages.some((m) => m.role === "assistant")) && (
+                        <div className="flex items-center gap-2">
+                          <Volume2 className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                          <div className="relative">
+                            <select
+                              value={selectedVoice}
+                              onChange={(e) => setSelectedVoice(e.target.value)}
+                              disabled={voicesLoading}
+                              className="appearance-none bg-gray-100 dark:bg-[#242630] text-gray-700 dark:text-gray-300 text-xs font-medium pl-4 pr-8 py-2 rounded-lg border border-gray-200 dark:border-white/5 focus:outline-none cursor-pointer hover:bg-gray-200 dark:hover:bg-[#2a2c38] transition-colors duration-300 disabled:opacity-60"
+                            >
+                              {ttsVoices.map((v) => {
+                                const id = v.voice_id;
+                                const label = [id, v.language, v.gender].filter(Boolean).join(" · ");
+                                return <option key={id} value={id}>{label || id}</option>;
+                              })}
+                            </select>
+                            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-500 dark:text-gray-400 pointer-events-none transition-colors duration-300" />
+                          </div>
                         </div>
                       )}
                     </div>

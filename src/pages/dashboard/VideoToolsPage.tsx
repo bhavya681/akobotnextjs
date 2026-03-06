@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Video,
@@ -39,7 +39,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { moduleAPI } from "@/lib/api";
+import { moduleAPI, galleryAPI, authAPI, modelRegistryAPI, type RegistryModel } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -49,12 +49,19 @@ const videoModes = [
   { id: "enhance", label: "Enhance", icon: Wand2, color: "from-pink-500 to-rose-500" },
 ];
 
-const videoModels = [
+const FALLBACK_VIDEO_MODELS = [
   { id: "cogvideox", name: "CogVideoX", icon: Film, description: "High quality video generation" },
   { id: "runway", name: "Runway Gen-2", icon: Film, description: "Cinematic quality videos" },
   { id: "pika", name: "Pika Labs", icon: Zap, description: "Fast generation" },
   { id: "stability", name: "Stable Video", icon: Video, description: "Stable and consistent" },
 ];
+
+const registryToVideoModel = (m: RegistryModel) => ({
+  id: m.modelId,
+  name: m.displayName || m.modelId,
+  icon: Film,
+  description: (m as { description?: string }).description || (m.costPerRequest != null ? `${m.costPerRequest} credits` : "AI video model"),
+});
 
 const quantityOptions = [
   { value: "1", label: "1 Video", badge: "1x" },
@@ -65,7 +72,9 @@ const quantityOptions = [
 const VideoToolsPage = () => {
   const router = useRouter();
   const [activeMode, setActiveMode] = useState("text-to-video");
-  const [selectedModel, setSelectedModel] = useState(videoModels.find(m => m.id === "cogvideox") || videoModels[0]);
+  const [videoModels, setVideoModels] = useState<{ id: string; name: string; icon: typeof Film; description: string }[]>(FALLBACK_VIDEO_MODELS);
+  const [videoModelsLoading, setVideoModelsLoading] = useState(true);
+  const [selectedModel, setSelectedModel] = useState(FALLBACK_VIDEO_MODELS[0]);
   const [isModelOpen, setIsModelOpen] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [enhancePrompt, setEnhancePrompt] = useState(false);
@@ -75,15 +84,57 @@ const VideoToolsPage = () => {
   const [generatedVideo, setGeneratedVideo] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
+  useEffect(() => {
+    let cancelled = false;
+    setVideoModelsLoading(true);
+    modelRegistryAPI
+      .getModels()
+      .then((data) => {
+        if (cancelled) return;
+        const list = data.video ?? [];
+        const display = list.length > 0 ? list.map(registryToVideoModel) : FALLBACK_VIDEO_MODELS;
+        setVideoModels(display);
+        const currentId = selectedModel.id;
+        if (!display.some((m) => m.id === currentId)) {
+          setSelectedModel(display[0]);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setVideoModels(FALLBACK_VIDEO_MODELS);
+      })
+      .finally(() => {
+        if (!cancelled) setVideoModelsLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  const extractVideoUrl = (response: unknown): string | null => {
+    const r = response as Record<string, unknown>;
+    if (r.video) {
+      const v = r.video;
+      return typeof v === "string" ? v : (v as Record<string, string>)?.url || (v as Record<string, string>)?.data || null;
+    }
+    if (Array.isArray(r.output) && r.output[0]) return r.output[0] as string;
+    if (Array.isArray(r.proxy_links) && r.proxy_links[0]) return r.proxy_links[0] as string;
+    if (r.url) return r.url as string;
+    if (r.data) {
+      const d = r.data as string | { video?: string };
+      if (typeof d === "string" && d.startsWith("data:")) return d;
+      if (typeof d === "string") return `data:video/mp4;base64,${d}`;
+      if (d?.video?.startsWith("data:")) return d.video;
+      if (d?.video) return `data:video/mp4;base64,${d.video}`;
+    }
+    return null;
+  };
+
   const handleGenerate = async () => {
     if (!prompt.trim() || isLoading) return;
     setIsLoading(true);
     setGeneratedVideo(null);
     try {
-      // Use the new apimodule text-to-video API
       const response = await moduleAPI.textToVideo({
         prompt: prompt.trim(),
-        model_id: selectedModel.id === "cogvideox" ? "cogvideox" : selectedModel.id,
+        model_id: selectedModel.id,
         num_frames: 25,
         width: 512,
         height: 512,
@@ -92,40 +143,22 @@ const VideoToolsPage = () => {
         fps: 16,
       });
 
-      // Extract video URL from response
-      // The response might have different formats:
-      // 1. Direct video URL in response.video or response.url
-      // 2. Base64 video in response.video or response.data
-      // 3. ID for polling in response.id
-      let videoUrl: string | null = null;
-
-      // Try to extract video URL from various possible response formats
-      if (response.video) {
-        videoUrl = typeof response.video === 'string' ? response.video : response.video.url || response.video.data;
-      } else if (Array.isArray(response.output) && response.output[0]) {
-        videoUrl = response.output[0];
-      } else if (Array.isArray(response.proxy_links) && response.proxy_links[0]) {
-        videoUrl = response.proxy_links[0];
-      } else if (response.url) {
-        videoUrl = response.url;
-      } else if (response.data) {
-        // If it's base64, convert to data URL
-        const base64Data = typeof response.data === 'string' ? response.data : response.data.video;
-        if (base64Data && base64Data.startsWith('data:')) {
-          videoUrl = base64Data;
-        } else if (base64Data) {
-          videoUrl = `data:video/mp4;base64,${base64Data}`;
-        }
-      } else if (response.id) {
-        // If response has an ID, we might need to poll for the result
-        // For now, show a message that polling is not yet implemented
-        toast.info("Video generation started. Polling for results...");
-        // TODO: Implement polling if the API requires it
-        return;
-      }
-
+      const videoUrl = extractVideoUrl(response);
       if (videoUrl) {
         setGeneratedVideo(videoUrl);
+        // Add to gallery when authenticated and URL is a proper http(s) URL (not data:)
+        if (authAPI.isAuthenticated() && videoUrl.startsWith("http")) {
+          galleryAPI.createGalleryItem({
+            contentType: "video",
+            url: videoUrl,
+            thumbnailUrl: videoUrl,
+            storageKey: videoUrl.replace(/^https?:\/\/[^/]+\//, ""),
+            prompt: prompt.trim(),
+            modelId: selectedModel.id,
+            isPrivate: false,
+            mimeType: "video/mp4",
+          }).catch(() => { /* silent - don't block UX */ });
+        }
         toast.success("Video generated successfully!");
       } else {
         // If we can't extract a video URL, show the response for debugging
@@ -247,7 +280,7 @@ const VideoToolsPage = () => {
                       const ModelIcon = selectedModel.icon;
                       return <ModelIcon className="w-3.5 h-3.5 text-primary" />;
                     })()}
-                    <span className="hidden sm:inline">{selectedModel.name}</span>
+                    <span className="hidden sm:inline">{videoModelsLoading ? "Loading..." : selectedModel.name}</span>
                     <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${isModelOpen ? 'rotate-180' : ''}`} />
                   </motion.button>
                 </DropdownMenuTrigger>

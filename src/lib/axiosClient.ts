@@ -1,10 +1,16 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
 
 const REFRESH_ENDPOINT = "/api/auth/refresh";
-const REFRESH_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+const REFRESH_COOLDOWN_MS = 60 * 1000; // 1 minute - allow retry if refresh failed transiently
+const POST_LOGIN_GRACE_MS = 90 * 1000; // Don't attempt refresh (and thus logout) within 90s of login
 
 let lastRefreshTime = 0;
+let lastLoginTime = 0;
 let refreshPromise: Promise<string | null> | null = null;
+
+export function setLastLoginTime(): void {
+  lastLoginTime = Date.now();
+}
 
 function getAccessToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -39,6 +45,7 @@ export function clearAuthTokens(): void {
 function logoutAndRedirect(): void {
   clearAuthTokens();
   if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("auth-storage-change"));
     window.location.href = "/auth/sign-in";
   }
 }
@@ -78,6 +85,11 @@ function canAttemptRefresh(): boolean {
 async function doRefresh(): Promise<string | null> {
   if (refreshPromise) return refreshPromise;
 
+  // Don't attempt refresh during grace period after login (avoids 401 → logout right after login)
+  if (Date.now() - lastLoginTime < POST_LOGIN_GRACE_MS) {
+    return null;
+  }
+
   if (!canAttemptRefresh()) {
     return null;
   }
@@ -108,16 +120,19 @@ async function doRefresh(): Promise<string | null> {
 
       const data = (await response.json()) as {
         accessToken?: string;
-        access_token?: string;
         refreshToken?: string;
-        refresh_token?: string;
+        tokenType?: string;
+        user?: Record<string, unknown>;
       };
-      const nextAccessToken = data.accessToken || data.access_token;
-      const nextRefreshToken = data.refreshToken || data.refresh_token;
+      const nextAccessToken = data.accessToken;
+      const nextRefreshToken = data.refreshToken;
 
       if (nextAccessToken && typeof window !== "undefined") {
         setAccessToken(nextAccessToken);
         if (nextRefreshToken) setRefreshToken(nextRefreshToken);
+        if (data.user) {
+          localStorage.setItem("user", JSON.stringify(data.user));
+        }
         return nextAccessToken;
       }
       return null;

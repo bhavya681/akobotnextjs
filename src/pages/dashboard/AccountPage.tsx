@@ -16,12 +16,14 @@ import {
   Loader2,
   Wallet,
   History,
+  Monitor,
+  Smartphone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import UserAvatar from "@/components/UserAvatar";
-import { profileAPI } from "@/lib/api";
+import { profileAPI, authAPI, type AuthSession } from "@/lib/api";
 
 // Use more granular breakpoints for responsiveness
 const ACCOUNT_INPUT =
@@ -44,12 +46,17 @@ const AccountPage = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
 
+  // Sessions state
+  const [sessions, setSessions] = useState<AuthSession[]>([]);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
+
   // Fetch profile data
   useEffect(() => {
     if (isAuthenticated) {
       fetchProfile();
       fetchWalletBalance();
       fetchWalletHistory();
+      fetchSessions();
     }
   }, [isAuthenticated]);
 
@@ -89,6 +96,20 @@ const AccountPage = () => {
       toast.error("Failed to load transaction history");
     } finally {
       setHistoryLoading(false);
+    }
+  };
+
+  const fetchSessions = async () => {
+    try {
+      setSessionsLoading(true);
+      const data = await authAPI.getSessions();
+      setSessions(data);
+    } catch (error: any) {
+      console.error("Failed to fetch sessions:", error);
+      toast.error("Failed to load active sessions");
+      setSessions([]);
+    } finally {
+      setSessionsLoading(false);
     }
   };
 
@@ -612,6 +633,80 @@ const AccountPage = () => {
                 </button>
               </div>
             </div>
+          </motion.div>
+
+          {/* Active Sessions / Devices */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="glass-card rounded-2xl p-4 sm:p-6"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <Monitor className="w-5 h-5 text-primary" />
+                Active Sessions
+              </h2>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchSessions}
+                disabled={sessionsLoading}
+              >
+                {sessionsLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  "Refresh"
+                )}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">
+              Devices where you are currently signed in. Users can only view their own sessions.
+            </p>
+            {sessionsLoading && sessions.length === 0 ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : sessions.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Smartphone className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No active sessions</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {sessions.map((session, idx) => {
+                  const device = session.deviceInfo as Record<string, string> | undefined;
+                  const deviceName = device?.name || device?.device || device?.userAgent || `Session ${idx + 1}`;
+                  const createdAt = session.createdAt
+                    ? new Date(session.createdAt).toLocaleString()
+                    : "Unknown";
+                  const expiresAt = session.expiresAt
+                    ? new Date(session.expiresAt).toLocaleString()
+                    : "—";
+                  return (
+                    <div
+                      key={session.token || idx}
+                      className="flex items-start gap-4 p-4 rounded-xl bg-secondary/30 hover:bg-secondary/40 transition-colors"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                        <Monitor className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {deviceName}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Created: {createdAt}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Expires: {expiresAt}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </motion.div>
 
           {/* API Keys Section */}

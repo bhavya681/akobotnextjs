@@ -44,7 +44,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { moduleAPI } from "@/lib/api";
+import { moduleAPI, galleryAPI, authAPI, modelRegistryAPI, type RegistryModel } from "@/lib/api";
 import { toast } from "sonner";
 import {
   Popover,
@@ -71,9 +71,8 @@ const headerModes: { id: ToolMode; label: string; icon: typeof ImageIcon }[] = [
   { id: "upscale", label: "Upscale", icon: Maximize2 },
 ];
 
-// Image models
-const imageModels = [
-  { id: "flux-2-dev", name: "Z Image", description: "High quality image generation", badge: "Pro" },
+const FALLBACK_IMAGE_MODELS: { id: string; name: string; description: string; badge: string | null }[] = [
+  { id: "flux-2-dev", name: "Flux 2 Dev", description: "High quality image generation", badge: "Pro" },
   { id: "flux-kontext-dev", name: "Kingly", description: "Advanced context understanding", badge: "New" },
   { id: "gen3", name: "Gen3", description: "Next-gen image model", badge: "Beta" },
   { id: "sdxl", name: "SDXL", description: "Stable Diffusion XL", badge: null },
@@ -125,9 +124,18 @@ interface Task {
   result?: string;
 }
 
+const registryToDisplay = (m: RegistryModel) => ({
+  id: m.modelId,
+  name: m.displayName || m.modelId,
+  description: (m as { description?: string }).description || "AI image model",
+  badge: m.costPerRequest != null ? `${m.costPerRequest} credits` : null,
+});
+
 const ImageToolsPage = () => {
   const router = useRouter();
   const [toolMode, setToolMode] = useState<ToolMode>("text2image");
+  const [imageModels, setImageModels] = useState<{ id: string; name: string; description: string; badge: string | null }[]>(FALLBACK_IMAGE_MODELS);
+  const [imageModelsLoading, setImageModelsLoading] = useState(true);
   const [selectedModel, setSelectedModel] = useState("flux-2-dev");
   const [selectedStyle, setSelectedStyle] = useState("dynamic");
   const [prompt, setPrompt] = useState("");
@@ -147,6 +155,30 @@ const ImageToolsPage = () => {
   const [modelPickerOpen, setModelPickerOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    let cancelled = false;
+    setImageModelsLoading(true);
+    modelRegistryAPI
+      .getModels()
+      .then((data) => {
+        if (cancelled) return;
+        const imageList = data.image ?? [];
+        const i2iList = data.image_to_image ?? [];
+        const combined = [...imageList, ...i2iList.filter((m) => !imageList.some((i) => i.modelId === m.modelId))];
+        const display = combined.length > 0 ? combined.map(registryToDisplay) : FALLBACK_IMAGE_MODELS;
+        setImageModels(display);
+        if (display.length > 0 && !display.some((m) => m.id === selectedModel)) {
+          setSelectedModel(display[0].id);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setImageModels(FALLBACK_IMAGE_MODELS);
+      })
+      .finally(() => {
+        if (!cancelled) setImageModelsLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   // Get current date
   const getCurrentDate = () => {
@@ -209,7 +241,9 @@ const ImageToolsPage = () => {
       return response.image_url.startsWith("data:") ? response.image_url : response.image_url;
     }
     if (response.output?.[0] && typeof response.output[0] === "string") {
-      return response.output[0].startsWith("data:") ? response.output[0] : response.output[0];
+      const o = response.output[0];
+      if (o.startsWith("data:") || o.startsWith("http")) return o;
+      return `data:image/png;base64,${o}`;
     }
     if (response.proxy_links?.[0] && typeof response.proxy_links[0] === "string") {
       return response.proxy_links[0];
@@ -320,8 +354,8 @@ const ImageToolsPage = () => {
 
       if (toolMode === "text2image") {
         const ratio = aspectRatios.find((r) => r.value === aspectRatio);
-        const width = ratio?.value === "1:1" ? 1024 : ratio?.value === "2:3" ? 768 : ratio?.value === "16:9" ? 1024 : 1024;
-        const height = ratio?.value === "1:1" ? 1024 : ratio?.value === "2:3" ? 1152 : ratio?.value === "16:9" ? 576 : 1024;
+        const width = 512;
+        const height = 512;
 
         const response = await moduleAPI.imageGen({
           prompt: task.prompt,
@@ -329,7 +363,6 @@ const ImageToolsPage = () => {
           width,
           height,
         });
-
         imageUrl = extractImageFromResponse(response);
         if (!imageUrl && response && typeof response === "object" && "id" in response && typeof response.id === "string") {
           const fetched = await moduleAPI.fetchImageResult(response.id);
@@ -407,6 +440,20 @@ const ImageToolsPage = () => {
 
         setGeneratedImages((prev) => [newImage, ...prev]);
         if (!selectedImage) setSelectedImage(newImage);
+
+        // Add to gallery when authenticated and URL is a proper http(s) URL (not data:)
+        if (authAPI.isAuthenticated() && imageUrl.startsWith("http")) {
+          galleryAPI.createGalleryItem({
+            contentType: toolMode === "image2image" || toolMode === "upscale" ? "image_to_image" : "image",
+            url: imageUrl,
+            thumbnailUrl: imageUrl,
+            storageKey: imageUrl.replace(/^https?:\/\/[^/]+\//, ""),
+            prompt: task.prompt,
+            modelId: selectedModel,
+            isPrivate: false,
+            mimeType: "image/png",
+          }).catch(() => { /* silent - don't block UX */ });
+        }
 
         toast.success("Creation complete!");
         setIsGenerating(false);
@@ -562,10 +609,11 @@ const ImageToolsPage = () => {
                   <PopoverTrigger asChild>
                     <button
                       type="button"
-                      className="w-full h-12 rounded-[10px] bg-secondary border border-border flex items-center justify-between gap-2 px-4 text-left hover:bg-accent transition-all"
+                      disabled={imageModelsLoading}
+                      className="w-full h-12 rounded-[10px] bg-secondary border border-border flex items-center justify-between gap-2 px-4 text-left hover:bg-accent transition-all disabled:opacity-70"
                     >
                       <span className="font-semibold text-base text-foreground truncate">
-                        {imageModels.find((m) => m.id === selectedModel)?.name ?? selectedModel}
+                        {imageModelsLoading ? "Loading models..." : (imageModels.find((m) => m.id === selectedModel)?.name ?? selectedModel)}
                       </span>
                       {imageModels.find((m) => m.id === selectedModel)?.badge && (
                         <Badge className="text-[9px] h-5 bg-primary/10 text-primary border-0 shrink-0">

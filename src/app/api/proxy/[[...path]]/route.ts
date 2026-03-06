@@ -6,14 +6,28 @@ async function proxy(method: string, req: NextRequest, path: string[]) {
   const pathStr = path.join("/");
   const url = `${BASE.replace(/\/$/, "")}/${pathStr}${req.nextUrl.search}`;
   const headers: Record<string, string> = {};
-  ["authorization", "content-type", "accept"].forEach((k) => {
+  // Auth and content headers
+  ["authorization", "content-type", "accept", "cookie"].forEach((k) => {
     const v = req.headers.get(k);
     if (v) headers[k] = v;
   });
+  // Forward client identity so backend device/session validation sees the real client
+  const forwardedFor = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip");
+  if (forwardedFor) headers["x-forwarded-for"] = forwardedFor;
+  const ua = req.headers.get("user-agent");
+  if (ua) headers["user-agent"] = ua;
+  const origin = req.headers.get("origin");
+  if (origin) headers["origin"] = origin;
+  const host = req.headers.get("host");
+  if (host) headers["x-forwarded-host"] = host;
+  headers["x-forwarded-proto"] = req.nextUrl.protocol.replace(":", "") || "https";
   let body: ArrayBuffer | undefined;
   if (method !== "GET" && method !== "HEAD") {
     const b = await req.arrayBuffer();
-    if (b.byteLength > 0) body = b;
+    if (b.byteLength > 0) {
+      body = b;
+      headers["content-length"] = String(b.byteLength);
+    }
   }
   const res = await fetch(url, {
     method,

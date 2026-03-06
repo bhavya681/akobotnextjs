@@ -60,6 +60,8 @@ export function galleryItemToFeedItem(g: GalleryItem): FeedItem | null {
     isLiked: false,
     isSaved: false,
     isFollowing: false,
+    galleryId: g._id,
+    isPrivate: g.isPrivate,
   };
 }
 

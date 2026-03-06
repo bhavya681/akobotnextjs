@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return [
+      { source: "/uploads/:path*", destination: `${API}/uploads/:path*` },
       { source: "/api/auth/:path*", destination: `${API}/auth/:path*` },
       { source: "/api/admin/:path*", destination: `${API}/api/admin/:path*` },
       { source: "/api/gallery/:path*", destination: `${API}/api/gallery/:path*` },
@@ -16,7 +17,8 @@ const nextConfig: NextConfig = {
       { source: "/api/packages", destination: `${API}/api/packages` },
       { source: "/api/packages/:path*", destination: `${API}/api/packages/:path*` },
       { source: "/api/payment/:path*", destination: `${API}/api/payment/:path*` },
-      { source: "/api/apimodule/:path*", destination: `${API}/:path*` },
+      { source: "/api/apimodule/v1/:path*", destination: `${API}/apimodule/v1/:path*` },
+      { source: "/api/apimodule/:path*", destination: `${API}/apimodule/:path*` },
       { source: "/api/provider/:path*", destination: `${API}/:path*` },
     ];
   },

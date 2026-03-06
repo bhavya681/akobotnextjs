@@ -29,6 +29,10 @@ export interface FeedItem {
   isLiked: boolean;
   isSaved: boolean;
   isFollowing: boolean;
+  /** Gallery item ID for API updates */
+  galleryId?: string;
+  /** Whether item is private (only visible to owner) */
+  isPrivate?: boolean;
 }
 
 interface FeedCardProps {

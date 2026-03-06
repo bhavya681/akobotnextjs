@@ -1,4 +1,4 @@
-import { apiClient } from "./axiosClient";
+import { apiClient, clearAuthTokens, setLastLoginTime } from "./axiosClient";
 
 // Server-side proxy: client calls /api/* (same-origin), Next.js rewrites to api.akobot.in
 const API_AUTH = "/api/auth";
@@ -181,6 +181,14 @@ const adminApiRequest = async (
   return response;
 };
 
+/** Active session/device from GET /auth/sessions */
+export interface AuthSession {
+  token: string;
+  createdAt: string;
+  expiresAt: string;
+  deviceInfo?: Record<string, unknown>;
+}
+
 // Auth API
 export const authAPI = {
   /**
@@ -213,16 +221,21 @@ export const authAPI = {
       }
 
       const data = await response.json();
-      if (data.accessToken) {
-        localStorage.setItem('accessToken', data.accessToken);
-        if (data.refreshToken) {
-          localStorage.setItem('refreshToken', data.refreshToken);
+      const payload = data?.data ?? data;
+      const accessToken = payload?.accessToken ?? data?.accessToken;
+      const refreshToken = payload?.refreshToken ?? data?.refreshToken;
+      const user = payload?.user ?? data?.user;
+      if (accessToken) {
+        localStorage.setItem('accessToken', accessToken);
+        if (refreshToken) {
+          localStorage.setItem('refreshToken', refreshToken);
         }
-        if (data.user) {
-          localStorage.setItem('user', JSON.stringify(data.user));
+        if (user && typeof user === 'object') {
+          localStorage.setItem('user', JSON.stringify(user));
         }
+        setLastLoginTime();
       }
-      return data;
+      return { accessToken, refreshToken, user, ...data };
     } catch (error: any) {
       // Handle network/fetch errors
       if (error?.name === 'TypeError' && error?.message?.includes('fetch')) {
@@ -265,16 +278,22 @@ export const authAPI = {
       }
 
       const data = await response.json();
-      if (data.accessToken) {
-        localStorage.setItem('accessToken', data.accessToken);
-        if (data.refreshToken) {
-          localStorage.setItem('refreshToken', data.refreshToken);
+      // Support multiple response shapes: { accessToken, user } or { data: { accessToken, user } }
+      const payload = data?.data ?? data;
+      const accessToken = payload?.accessToken ?? data?.accessToken;
+      const refreshToken = payload?.refreshToken ?? data?.refreshToken;
+      const user = payload?.user ?? data?.user;
+      if (accessToken) {
+        localStorage.setItem('accessToken', accessToken);
+        if (refreshToken) {
+          localStorage.setItem('refreshToken', refreshToken);
         }
-        if (data.user) {
-          localStorage.setItem('user', JSON.stringify(data.user));
+        if (user && typeof user === 'object') {
+          localStorage.setItem('user', JSON.stringify(user));
         }
+        setLastLoginTime();
       }
-      return data;
+      return { accessToken, refreshToken, user, ...data };
     } catch (error: any) {
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         throw new Error('Cannot connect to backend. Make sure the backend server is running.');
@@ -353,11 +372,21 @@ export const authAPI = {
 
   /**
    * Get current user from localStorage
+   * Normalizes _id to id for MongoDB compatibility.
    * @returns User object or null
    */
   getCurrentUser: () => {
-    const userStr = localStorage.getItem('user');
-    return userStr ? JSON.parse(userStr) : null;
+    if (typeof window === 'undefined') return null;
+    try {
+      const userStr = localStorage.getItem('user');
+      if (!userStr) return null;
+      const u = JSON.parse(userStr);
+      if (!u || typeof u !== 'object') return null;
+      if (u._id && !u.id) u.id = u._id;
+      return u;
+    } catch {
+      return null;
+    }
   },
 
   /**
@@ -450,16 +479,30 @@ export const authAPI = {
 
       const response = await fetch(`${API_AUTH}/refresh`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({ refreshToken: token }),
+        credentials: 'include',
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || errorData.error || `Server error: ${response.status}`);
+        const errorData = await response.json().catch(() => ({})) as { message?: string; error?: string };
+        const msg = errorData?.message || errorData?.error || `Server error: ${response.status}`;
+        if (response.status === 401) {
+          clearAuthTokens();
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new Event('auth-storage-change'));
+            window.location.href = '/auth/sign-in';
+          }
+        }
+        throw new Error(msg);
       }
 
-      const data = await response.json();
+      const data = await response.json() as {
+        accessToken?: string;
+        refreshToken?: string;
+        tokenType?: string;
+        user?: Record<string, unknown>;
+      };
       if (data.accessToken) {
         localStorage.setItem('accessToken', data.accessToken);
         if (data.refreshToken) {
@@ -479,24 +522,33 @@ export const authAPI = {
   },
 
   /**
-   * Request password reset
+   * Request password reset email (public, no login required)
    * POST /auth/forgot-password
+   * Always returns same success message whether email exists or not (security).
    * @param email - User email address
-   * @returns Promise
+   * @returns Promise with message
    */
-  forgotPassword: async (email: string) => {
+  forgotPassword: async (email: string): Promise<{ message: string }> => {
+    const trimmed = (email || '').trim();
+    if (!trimmed) {
+      throw new Error('Email is required');
+    }
     try {
       const response = await apiRequest('/auth/forgot-password', {
         method: 'POST',
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: trimmed }),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || errorData.error || `Server error: ${response.status}`);
+        const msg = errorData.message || errorData.error || `Server error: ${response.status}`;
+        throw new Error(typeof msg === 'string' ? msg : Array.isArray(msg) ? msg.join(', ') : 'Request failed');
       }
 
-      return response.json().catch(() => ({}));
+      const data = await response.json().catch(() => ({}));
+      return {
+        message: data?.message ?? 'If your email is registered, you will receive a password reset link shortly.',
+      };
     } catch (error: any) {
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         throw new Error('Cannot connect to backend. Make sure the backend server is running.');
@@ -536,9 +588,9 @@ export const authAPI = {
   /**
    * Get all active sessions/devices
    * GET /auth/sessions
-   * @returns Promise with array of active sessions
+   * @returns Promise with array of active sessions (user-specific)
    */
-  getSessions: async () => {
+  getSessions: async (): Promise<AuthSession[]> => {
     try {
       const response = await apiRequest('/auth/sessions', {
         method: 'GET',
@@ -549,7 +601,8 @@ export const authAPI = {
         throw new Error(errorData.message || errorData.error || `Server error: ${response.status}`);
       }
 
-      return response.json();
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
     } catch (error: any) {
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         throw new Error('Cannot connect to backend. Make sure the backend server is running.');
@@ -692,7 +745,7 @@ export const imageAPI = {
     height?: number;
     negative_prompt?: string;
   }) => {
-    const response = await apiRequest('/api/image/text2img', {
+      const response = await apiRequest('/image/text2img', {
       method: 'POST',
       body: JSON.stringify({
         prompt: params.prompt,
@@ -751,9 +804,16 @@ export const audioAPI = {
       }),
     });
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error((data as { message?: string }).message || "TTS generation failed");
-    const d = data as { url?: string; audio_url?: string; data?: { url?: string } };
-    return { url: d.url ?? d.audio_url ?? d.data?.url };
+    if (!response.ok) {
+      const err = data as { message?: string; error?: string };
+      const msg = err.message || err.error || "TTS generation failed";
+      if (response.status === 400) {
+        throw new Error(msg.includes("credit") || msg.includes("insufficient") ? "Insufficient credits for audio generation" : msg);
+      }
+      throw new Error(msg);
+    }
+    const d = data as { url?: string; audio_url?: string; output?: string; data?: { url?: string } };
+    return { url: d.url ?? d.audio_url ?? d.output ?? d.data?.url };
   },
 };
 
@@ -827,7 +887,18 @@ const fetchApimodule = async (
     });
 
   let response = await doFetch(headers);
-  if (response.status === 401 && !preferAuth) {
+  if (response.status === 401 && preferAuth) {
+    try {
+      await authAPI.refresh();
+      const newToken = getAuthToken();
+      if (newToken) {
+        const retryHeaders: HeadersInit = { ...(init.headers || {}), Authorization: `Bearer ${newToken}` };
+        response = await doFetch(retryHeaders);
+      }
+    } catch {
+      // Refresh failed, return original 401
+    }
+  } else if (response.status === 401 && !preferAuth) {
     const token = getAuthToken();
     if (token) {
       const retryHeaders: HeadersInit = { ...headers, Authorization: `Bearer ${token}` };
@@ -878,18 +949,22 @@ export const moduleAPI = {
     stream?: boolean;
   }) => {
     try {
-      const response = await fetchApimodule("/apimodule/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "*/*",
+      const response = await fetchApimodule(
+        "/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "*/*",
+          },
+          body: JSON.stringify({
+            prompt: data.prompt,
+            model: data.model,
+            stream: data.stream ?? false,
+          }),
         },
-        body: JSON.stringify({
-          prompt: data.prompt,
-          model: data.model,
-          stream: data.stream ?? false,
-        }),
-      });
+        true // preferAuth: send token when available (backend may require auth)
+      );
 
       if (!response.ok) {
         throw new Error(await readErrorMessage(response));
@@ -916,18 +991,22 @@ export const moduleAPI = {
     onChunk: (chunk: string) => void
   ) => {
     try {
-      const response = await fetchApimodule("/apimodule/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "text/event-stream, application/json, text/plain, */*",
+      const response = await fetchApimodule(
+        "/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "text/event-stream, application/json, text/plain, */*",
+          },
+          body: JSON.stringify({
+            prompt: data.prompt,
+            model: data.model,
+            stream: true,
+          }),
         },
-        body: JSON.stringify({
-          prompt: data.prompt,
-          model: data.model,
-          stream: true,
-        }),
-      });
+        true // preferAuth
+      );
 
       if (!response.ok) {
         throw new Error(await readErrorMessage(response));
@@ -997,6 +1076,7 @@ export const moduleAPI = {
   /**
    * Image Generation (returns base64, no polling)
    * POST /apimodule/v1/image-gen
+   * Falls back to imageAPI.text2img if apimodule returns 500.
    */
   imageGen: async (data: {
     prompt: string;
@@ -1004,27 +1084,42 @@ export const moduleAPI = {
     width?: number;
     height?: number;
   }) => {
+    const body = {
+      prompt: data.prompt,
+      model_id: data.model_id,
+      width: data.width ?? 512,
+      height: data.height ?? 512,
+    };
     try {
       const response = await fetchApimodule(
-        "/apimodule/v1/image-gen",
+        "/v1/image-gen",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
-          body: JSON.stringify({
-            prompt: data.prompt,
-            model_id: data.model_id,
-            ...(data.width !== undefined ? { width: data.width } : {}),
-            ...(data.height !== undefined ? { height: data.height } : {}),
-          }),
+          body: JSON.stringify(body),
         },
         true
       );
 
       if (!response.ok) {
-        throw new Error(await readErrorMessage(response));
+        if (response.status === 500) {
+          try {
+            return await imageAPI.text2img({
+              prompt: data.prompt,
+              model_id: data.model_id,
+              width: data.width ?? 512,
+              height: data.height ?? 512,
+            });
+          } catch {
+            const msg = await readErrorMessage(response);
+            throw new Error(`Image generation failed: ${msg}`);
+          }
+        }
+        const msg = await readErrorMessage(response);
+        throw new Error(msg);
       }
 
       return response.json().catch(() => ({}));
@@ -1038,7 +1133,9 @@ export const moduleAPI = {
 
   /**
    * Image to Image transformation
-   * POST /apimodule/v1/image-to-image
+   * POST /apimodule/v1/image-to-image (multipart/form-data)
+   * Uses /api/proxy to forward multipart as-is (avoids "prompt must be string" parsing issues).
+   * Handles 401 "token does not belong to this device" with refresh + retry.
    */
   imageToImage: async (data: {
     prompt: string;
@@ -1048,26 +1145,88 @@ export const moduleAPI = {
     file?: File;
   }) => {
     try {
-      const formData = new FormData();
-      formData.append("prompt", data.prompt);
-      if (data.model_id) formData.append("model_id", data.model_id);
-      if (data.strength !== undefined) formData.append("strength", String(data.strength));
-      if (data.file) formData.append("file", data.file);
-      if (data.init_image) {
-        const base64String = data.init_image.includes(",")
-          ? data.init_image.split(",")[1]
-          : data.init_image;
-        formData.append("init_image", base64String);
+      const buildFormData = () => {
+        const fd = new FormData();
+        // Backend requires prompt as a non-empty string
+        const promptVal =
+          (typeof data.prompt === "string" && data.prompt.trim()) || "Transform image";
+        fd.append("prompt", promptVal);
+        if (data.model_id) fd.append("model_id", String(data.model_id));
+        if (data.strength !== undefined) fd.append("strength", String(data.strength));
+        // API expects init_image as full data URL (data:image/png;base64,...) per docs
+        if (data.init_image) {
+          const imgVal = data.init_image.startsWith("data:")
+            ? data.init_image
+            : `data:image/png;base64,${data.init_image}`;
+          fd.append("init_image", imgVal);
+        }
+        if (data.file) fd.append("file", data.file);
+        return fd;
+      };
+      const apiBase =
+        (typeof window !== "undefined" && (process.env.NEXT_PUBLIC_API_URL || process.env.VITE_API_URL)) ||
+        "https://api.akobot.ai";
+      const directUrl = `${apiBase.replace(/\/$/, "")}/apimodule/v1/image-to-image`;
+      const proxyUrl = "/api/proxy/apimodule/v1/image-to-image";
+      const doRequest = (token: string | null, useProxy = false) => {
+        const headers: HeadersInit = {};
+        if (token) (headers as Record<string, string>).Authorization = `Bearer ${token}`;
+        const url = useProxy ? proxyUrl : directUrl;
+        return fetch(url, {
+          method: "POST",
+          headers,
+          body: buildFormData(),
+          credentials: useProxy ? "include" : "omit",
+        });
+      };
+
+      let token = getAuthToken();
+      let response: Response;
+      try {
+        response = await doRequest(token);
+      } catch (e) {
+        // CORS/network error on direct fetch; fall back to same-origin proxy
+        response = await doRequest(token, true);
       }
 
-      const response = await fetchApimodule(
-        "/apimodule/v1/image-to-image",
-        {
-          method: "POST",
-          body: formData,
-        },
-        true
-      );
+      if (response.status === 401) {
+        let errMsg = "";
+        try {
+          const err = await response.json().catch(() => ({})) as { message?: string };
+          errMsg = err?.message ?? "";
+        } catch { /* ignore */ }
+
+        const isDeviceError = /token does not belong|Session invalid/i.test(errMsg);
+
+        try {
+          await authAPI.refresh();
+          token = getAuthToken();
+          if (token) {
+            try {
+              response = await doRequest(token);
+            } catch {
+              response = await doRequest(token, true);
+            }
+          }
+        } catch {
+          if (isDeviceError) {
+            clearAuthTokens();
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(new Event("auth-storage-change"));
+            }
+            throw new Error("Session expired. Please sign in again to continue.");
+          }
+          throw new Error(errMsg || "Unauthorized. Please sign in again.");
+        }
+
+        if (response.status === 401 && isDeviceError) {
+          clearAuthTokens();
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new Event("auth-storage-change"));
+          }
+          throw new Error("Session expired. Please sign in again to continue.");
+        }
+      }
 
       if (!response.ok) {
         throw new Error(await readErrorMessage(response));
@@ -1097,26 +1256,25 @@ export const moduleAPI = {
     fps?: number;
   }) => {
     try {
+      const body = {
+        prompt: data.prompt,
+        model_id: data.model_id ?? "cogvideox",
+        num_frames: data.num_frames ?? 25,
+        width: data.width ?? 512,
+        height: data.height ?? 512,
+        num_inference_steps: data.num_inference_steps ?? 20,
+        guidance_scale: data.guidance_scale ?? 7,
+        fps: data.fps ?? 16,
+      };
       const response = await fetchApimodule(
-        "/apimodule/v1/text-to-video",
+        "/v1/text-to-video",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
-          body: JSON.stringify({
-            prompt: data.prompt,
-            ...(data.model_id !== undefined ? { model_id: data.model_id } : {}),
-            ...(data.num_frames !== undefined ? { num_frames: data.num_frames } : {}),
-            ...(data.width !== undefined ? { width: data.width } : {}),
-            ...(data.height !== undefined ? { height: data.height } : {}),
-            ...(data.num_inference_steps !== undefined
-              ? { num_inference_steps: data.num_inference_steps }
-              : {}),
-            ...(data.guidance_scale !== undefined ? { guidance_scale: data.guidance_scale } : {}),
-            ...(data.fps !== undefined ? { fps: data.fps } : {}),
-          }),
+          body: JSON.stringify(body),
         },
         true
       );
@@ -1140,7 +1298,7 @@ export const moduleAPI = {
    */
   fetchImageResult: async (id: string) => {
     try {
-      const response = await fetchApimodule(`/apimodule/v1/fetch-image-result/${id}`, {
+      const response = await fetchApimodule(`/v1/fetch-image-result/${id}`, {
         method: "GET",
         headers: { Accept: "application/json" },
       });
@@ -1182,7 +1340,7 @@ export const moduleAPI = {
       }
 
       const response = await fetchApimodule(
-        "/apimodule/v1/background-removal",
+        "/v1/background-removal",
         {
           method: "POST",
           body: formData,
@@ -2459,6 +2617,38 @@ export const paymentAPI = {
   },
 };
 
+// Model Registry API
+export interface RegistryModel {
+  modelId: string;
+  displayName: string;
+  costPerRequest?: number;
+  [key: string]: unknown;
+}
+
+export interface ModelRegistryResponse {
+  llm?: RegistryModel[];
+  image?: RegistryModel[];
+  video?: RegistryModel[];
+  image_to_image?: RegistryModel[];
+  audio?: RegistryModel[];
+  music?: RegistryModel[];
+}
+
+export const modelRegistryAPI = {
+  /**
+   * List all available AI models (grouped by category)
+   * GET /api/model-registry/models
+   */
+  getModels: async (): Promise<ModelRegistryResponse> => {
+    const response = await mainApiRequest("/api/model-registry/models", { method: "GET" });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error((err as { message?: string }).message || "Failed to fetch models");
+    }
+    return response.json();
+  },
+};
+
 // Gallery API
 export type GalleryContentType = "image" | "video" | "image_to_image" | "llm";
 
@@ -2529,7 +2719,11 @@ export const galleryAPI = {
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
-      throw new Error((err as { message?: string }).message || `Failed to fetch gallery: ${response.status}`);
+      const msg = (err as { message?: string }).message || `Failed to fetch gallery: ${response.status}`;
+      if (response.status === 401) {
+        throw new Error("Please sign in to view your gallery");
+      }
+      throw new Error(msg);
     }
     return response.json();
   },
@@ -2595,6 +2789,62 @@ export const galleryAPI = {
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
       throw new Error((err as { message?: string }).message || `Failed to fetch item: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  /**
+   * Create a gallery item (after upload to S3)
+   * POST /api/gallery
+   */
+  createGalleryItem: async (body: {
+    contentType: GalleryContentType;
+    url: string;
+    thumbnailUrl?: string;
+    storageKey?: string;
+    prompt?: string;
+    modelId?: string;
+    isPrivate?: boolean;
+    fileSize?: number;
+    mimeType?: string;
+    metadata?: Record<string, unknown>;
+  }): Promise<GalleryItem> => {
+    const response = await mainApiRequest("/api/gallery", {
+      method: "POST",
+      body: JSON.stringify({
+        contentType: body.contentType,
+        url: body.url,
+        thumbnailUrl: body.thumbnailUrl ?? body.url,
+        storageKey: body.storageKey ?? body.url.replace(/^https?:\/\/[^/]+\//, ""),
+        prompt: body.prompt,
+        modelId: body.modelId,
+        isPrivate: body.isPrivate ?? false,
+        fileSize: body.fileSize,
+        mimeType: body.mimeType ?? (body.contentType === "video" ? "video/mp4" : "image/png"),
+        metadata: body.metadata ?? {},
+      }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error((err as { message?: string }).message || "Failed to create gallery item");
+    }
+    return response.json();
+  },
+
+  /**
+   * Update a gallery item (e.g. toggle isPrivate)
+   * PATCH /api/gallery/{id}
+   */
+  updateGalleryItem: async (id: string, data: { isPrivate?: boolean; prompt?: string }): Promise<GalleryItem> => {
+    const response = await mainApiRequest(`/api/gallery/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error((err as { message?: string }).message || "Failed to update gallery item");
     }
     return response.json();
   },

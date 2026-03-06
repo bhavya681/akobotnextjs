@@ -3,11 +3,12 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Lock, User, Apple, Chrome, Send, Bot, MessageCircle } from "lucide-react";
+import { Mail, Lock, User, Apple, Chrome, Send, Bot, MessageCircle, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
+import { authAPI } from "@/lib/api";
 import Logo from "@/components/Logo";
 
 const AuthSignIn = () => {
@@ -18,6 +19,10 @@ const AuthSignIn = () => {
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotSuccess, setForgotSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   
   // Sequential message animation state for 6 agents grid
   const [visibleMessages, setVisibleMessages] = useState<Record<string, number>>({});
@@ -157,17 +162,19 @@ const AuthSignIn = () => {
       if (isSignUp) {
         // Register - backend expects: { username, email, password }
         await register(email, username, password);
+        refreshUser(); // Ensure auth state syncs before redirect
         toast.success("Account created successfully!");
         setTimeout(() => {
           router.push("/dashboard");
-        }, 100);
+        }, 150);
       } else {
         // Login - backend expects: { identifier, password }
         await login(email, password);
+        refreshUser(); // Ensure auth state syncs before redirect
         toast.success("Logged in successfully!");
         setTimeout(() => {
           router.push("/dashboard");
-        }, 100);
+        }, 150);
       }
     } catch (error: any) {
       console.error("Auth error:", error);
@@ -184,6 +191,29 @@ const AuthSignIn = () => {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const emailToUse = forgotEmail.trim();
+    if (!emailToUse) {
+      toast.error("Please enter your email address");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const result = await authAPI.forgotPassword(emailToUse);
+      setForgotSuccess(true);
+      toast.success(result.message || "If your email is registered, you will receive a password reset link shortly.");
+      setTimeout(() => {
+        setShowForgotPassword(false);
+        setForgotSuccess(false);
+        setForgotEmail("");
+      }, 4000);
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to send reset email. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex bg-background">
@@ -237,10 +267,22 @@ const AuthSignIn = () => {
           className="mb-8"
         >
           <h2 className="text-foreground text-3xl font-bold mb-2">
-            {isSignUp ? "Create your account" : "Welcome back"}
+            {showForgotPassword
+              ? forgotSuccess
+                ? "Check your email"
+                : "Forgot password?"
+              : isSignUp
+                ? "Create your account"
+                : "Welcome back"}
           </h2>
           <p className="text-muted-foreground text-sm">
-            {isSignUp ? "Join AEKO Creative Suite today" : "Sign in to continue to your dashboard"}
+            {showForgotPassword
+              ? forgotSuccess
+                ? "If your email is registered, you will receive a password reset link shortly. Redirecting back to sign in..."
+                : "Enter your email and we'll send you a link to reset your password."
+              : isSignUp
+                ? "Join AEKO Creative Suite today"
+                : "Sign in to continue to your dashboard"}
           </p>
         </motion.div>
 
@@ -274,131 +316,212 @@ const AuthSignIn = () => {
         </motion.div>
         */}
 
-        {/* Email/Password Form - Always Visible */}
-        <motion.form
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          onSubmit={handleSubmit}
-          className="space-y-5 flex-1"
-        >
-          {/* Sign In / Sign Up Toggle */}
-          <div className="flex gap-2 p-1 bg-secondary rounded-lg border border-border">
-            <button
-              type="button"
-              onClick={() => setIsSignUp(false)}
-              className={`flex-1 h-10 rounded-md text-sm font-semibold transition-all duration-300 ${
-                !isSignUp 
-                  ? "bg-primary text-primary-foreground shadow-sm" 
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Sign In
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsSignUp(true)}
-              className={`flex-1 h-10 rounded-md text-sm font-semibold transition-all duration-300 ${
-                isSignUp 
-                  ? "bg-primary text-primary-foreground shadow-sm" 
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Sign Up
-            </button>
-          </div>
+        {/* Forgot Password Form */}
+        {showForgotPassword ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-5 flex-1"
+          >
+            {forgotSuccess ? (
+              <div className="py-8 text-center">
+                <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
+                  <Mail className="w-8 h-8 text-primary" />
+                </div>
+                <p className="text-muted-foreground text-sm">
+                  Redirecting back to sign in...
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleForgotPassword} className="space-y-5">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-muted-foreground" />
+                    Email
+                  </label>
+                  <Input
+                    type="email"
+                    placeholder="Enter your email address"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    className="h-12 bg-background border-2 border-border focus:border-primary text-foreground placeholder:text-muted-foreground rounded-lg transition-all duration-300 focus:ring-2 focus:ring-primary/20"
+                    autoFocus
+                  />
+                </div>
+                <div className="flex flex-col gap-3">
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base rounded-lg shadow-lg shadow-primary/40 hover:shadow-primary/60 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? "Sending..." : "Send reset link"}
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowForgotPassword(false);
+                      setForgotEmail("");
+                    }}
+                    className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to sign in
+                  </button>
+                </div>
+              </form>
+            )}
+          </motion.div>
+        ) : (
+          /* Email/Password Form - Login & Sign Up */
+          <motion.form
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            onSubmit={handleSubmit}
+            className="space-y-5 flex-1"
+          >
+            {/* Sign In / Sign Up Toggle */}
+            <div className="flex gap-2 p-1 bg-secondary rounded-lg border border-border">
+              <button
+                type="button"
+                onClick={() => setIsSignUp(false)}
+                className={`flex-1 h-10 rounded-md text-sm font-semibold transition-all duration-300 ${
+                  !isSignUp 
+                    ? "bg-primary text-primary-foreground shadow-sm" 
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsSignUp(true)}
+                className={`flex-1 h-10 rounded-md text-sm font-semibold transition-all duration-300 ${
+                  isSignUp 
+                    ? "bg-primary text-primary-foreground shadow-sm" 
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Sign Up
+              </button>
+            </div>
 
-          {/* Username Field - Only for Sign Up */}
-          {isSignUp && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="space-y-2"
-            >
+            {/* Username Field - Only for Sign Up */}
+            {isSignUp && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-2"
+              >
+                <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                  <User className="w-4 h-4 text-muted-foreground" />
+                  Username
+                </label>
+                <Input
+                  type="text"
+                  placeholder="Enter your username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="h-12 bg-background border-2 border-border focus:border-primary text-foreground placeholder:text-muted-foreground rounded-lg transition-all duration-300 focus:ring-2 focus:ring-primary/20"
+                />
+              </motion.div>
+            )}
+
+            {/* Email Field */}
+            <div className="space-y-2">
               <label className="text-sm font-medium text-foreground flex items-center gap-2">
-                <User className="w-4 h-4 text-muted-foreground" />
-                Username
+                <Mail className="w-4 h-4 text-muted-foreground" />
+                Email
               </label>
               <Input
-                type="text"
-                placeholder="Enter your username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="h-12 bg-background border-2 border-border focus:border-primary text-foreground placeholder:text-muted-foreground rounded-lg transition-all duration-300 focus:ring-2 focus:ring-primary/20"
               />
+            </div>
+
+            {/* Password Field */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                  <Lock className="w-4 h-4 text-muted-foreground" />
+                  Password
+                </label>
+                {!isSignUp && (
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPassword(true)}
+                    className="text-sm text-primary hover:text-primary/80 font-medium"
+                  >
+                    Forgot password?
+                  </button>
+                )}
+              </div>
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="h-12 bg-background border-2 border-border focus:border-primary text-foreground placeholder:text-muted-foreground rounded-lg transition-all duration-300 focus:ring-2 focus:ring-primary/20 pr-12"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((p) => !p)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 rounded transition-colors"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base rounded-lg shadow-lg shadow-primary/40 hover:shadow-primary/60 transition-all duration-300 relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                  animate={{
+                    x: ['-100%', '100%'],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    repeatDelay: 1,
+                    ease: "linear",
+                  }}
+                />
+                <span className="relative z-10">
+                  {isLoading ? (isSignUp ? "Creating Account..." : "Signing In...") : (isSignUp ? "Create Account" : "Sign In")}
+                </span>
+              </Button>
             </motion.div>
-          )}
+          </motion.form>
+        )}
 
-          {/* Email Field */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground flex items-center gap-2">
-              <Mail className="w-4 h-4 text-muted-foreground" />
-              Email
-            </label>
-            <Input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="h-12 bg-background border-2 border-border focus:border-primary text-foreground placeholder:text-muted-foreground rounded-lg transition-all duration-300 focus:ring-2 focus:ring-primary/20"
-            />
+        {/* Need help link - only when not in forgot password flow */}
+        {!showForgotPassword && (
+          <div className="pt-4">
+            <Link href="#" className="text-sm font-medium text-primary hover:text-primary/80 transition-all duration-300 inline-flex items-center gap-1 group">
+              Need help?
+              <motion.span
+                animate={{ x: [0, 4, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+                className="text-primary"
+              >
+                →
+              </motion.span>
+            </Link>
           </div>
-
-          {/* Password Field */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground flex items-center gap-2">
-              <Lock className="w-4 h-4 text-muted-foreground" />
-              Password
-            </label>
-            <Input
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="h-12 bg-background border-2 border-border focus:border-primary text-foreground placeholder:text-muted-foreground rounded-lg transition-all duration-300 focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
-
-          {/* Submit Button */}
-          <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base rounded-lg shadow-lg shadow-primary/40 hover:shadow-primary/60 transition-all duration-300 relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                animate={{
-                  x: ['-100%', '100%'],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  repeatDelay: 1,
-                  ease: "linear",
-                }}
-              />
-              <span className="relative z-10">
-                {isLoading ? (isSignUp ? "Creating Account..." : "Signing In...") : (isSignUp ? "Create Account" : "Sign In")}
-              </span>
-            </Button>
-          </motion.div>
-        </motion.form>
-
-        {/* Need help link */}
-        <div className="pt-4">
-          <Link href="#" className="text-sm font-medium text-primary hover:text-primary/80 transition-all duration-300 inline-flex items-center gap-1 group">
-            Need help?
-            <motion.span
-              animate={{ x: [0, 4, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-              className="text-primary"
-            >
-              →
-            </motion.span>
-          </Link>
-        </div>
+        )}
 
         {/* Mobile App Section */}
         <motion.div

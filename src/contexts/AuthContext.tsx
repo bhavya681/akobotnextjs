@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 
 /** Proactive token refresh interval: 5 minutes */
 const TOKEN_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+/** Grace period after login - don't run refresh (avoids 401 right after login) */
+const POST_LOGIN_GRACE_MS = 90 * 1000;
 
 interface User {
   id: string;
@@ -30,13 +32,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const lastAuthTimeRef = useRef<number>(0);
 
-  // Load user from localStorage on mount
+  // Load user from localStorage on mount and keep in sync
   useEffect(() => {
     const loadUser = () => {
       try {
+        const hasToken = authAPI.isAuthenticated();
         const userData = authAPI.getCurrentUser();
-        if (userData) {
+        if (hasToken && userData) {
           setUser(userData);
         } else {
           setUser(null);
@@ -58,21 +62,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     };
 
-    // Also listen for custom storage events (for same-tab updates)
+    // Same-tab auth updates (login, logout)
     const handleCustomStorageChange = () => {
       loadUser();
     };
 
+    // Sync when tab becomes visible (e.g. user logged in/out in another tab)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        loadUser();
+      }
+    };
+
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('auth-storage-change', handleCustomStorageChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('auth-storage-change', handleCustomStorageChange);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 
-  // Proactive token refresh every 5 minutes when authenticated
+  // Proactive token refresh every 5 minutes when authenticated (no immediate refresh after login)
   const refreshIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -86,18 +99,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const doRefresh = async () => {
+      // Skip refresh during grace period after login (avoids 401 → logout right after login)
+      if (Date.now() - lastAuthTimeRef.current < POST_LOGIN_GRACE_MS) {
+        return;
+      }
       try {
         await authAPI.refresh();
-        // Don't dispatch auth-storage-change here - token is in localStorage, user object unchanged.
-        // Dispatching would trigger loadUser → setUser → re-run effect → infinite loop.
       } catch (err) {
-        // Avoid forced logout on transient refresh/network failures.
-        // Actual unauthorized states are handled by request interceptors and guarded routes.
         console.warn('Token refresh skipped/failed; will retry on next cycle:', err);
       }
     };
 
-    doRefresh();
+    // Don't run doRefresh immediately - only on interval. Prevents logout right after login.
     refreshIntervalRef.current = setInterval(doRefresh, TOKEN_REFRESH_INTERVAL_MS);
 
     return () => {
@@ -110,15 +123,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const refreshUser = () => {
     const userData = authAPI.getCurrentUser();
-    setUser(userData);
+    const hasToken = authAPI.isAuthenticated();
+    setUser(hasToken && userData ? userData : null);
   };
 
   const login = async (identifier: string, password: string) => {
     try {
       const result = await authAPI.login(identifier, password);
-      if (result.accessToken && result.user) {
-        setUser(result.user);
-        // Dispatch custom event for immediate UI updates
+      lastAuthTimeRef.current = Date.now();
+      const userData = result.user ?? authAPI.getCurrentUser();
+      if (result.accessToken) {
+        setUser(userData ?? authAPI.getCurrentUser());
         window.dispatchEvent(new Event('auth-storage-change'));
       }
     } catch (error) {
@@ -129,9 +144,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const register = async (email: string, username: string, password: string) => {
     try {
       const result = await authAPI.register(email, username, password);
-      if (result.accessToken && result.user) {
-        setUser(result.user);
-        // Dispatch custom event for immediate UI updates
+      lastAuthTimeRef.current = Date.now();
+      const userData = result.user ?? authAPI.getCurrentUser();
+      if (result.accessToken) {
+        setUser(userData ?? authAPI.getCurrentUser());
         window.dispatchEvent(new Event('auth-storage-change'));
       }
     } catch (error) {
@@ -155,9 +171,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Single source of truth: both user state and token must be present
+  const hasToken = typeof window !== 'undefined' && !!localStorage.getItem('accessToken');
+  const isAuthenticated = !!user && hasToken;
+
   const value: AuthContextType = {
     user,
-    isAuthenticated: !!user && authAPI.isAuthenticated(),
+    isAuthenticated,
     isLoading,
     login,
     register,

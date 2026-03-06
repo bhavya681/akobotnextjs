@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   Sparkles,
@@ -18,13 +18,16 @@ import {
   Grid3x3,
   List,
   Loader2,
+  Lock,
+  Globe,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { toast } from "sonner";
 import ImageDetailModal from "@/components/feed/ImageDetailModal";
 import { FeedItem } from "@/components/feed/FeedCard";
-import { galleryAPI, authAPI } from "@/lib/api";
+import { galleryAPI, authAPI, modelRegistryAPI } from "@/lib/api";
 import { galleryItemToFeedItem, galleryItemToAgentItem, type AgentItemFromGallery } from "@/lib/galleryUtils";
 
 const quickActions = [
@@ -65,26 +68,76 @@ const defaultStats = [
   { label: "This Week", value: "156", change: "+8%", icon: TrendingUp },
 ];
 
+type VisibilityFilter = "all" | "public" | "private";
+
 const DashboardHome = () => {
   const [activeTab, setActiveTab] = useState<"images" | "videos" | "agents">("images");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [visibilityFilter, setVisibilityFilter] = useState<VisibilityFilter>("all");
   const [selectedItem, setSelectedItem] = useState<FeedItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [galleryItems, setGalleryItems] = useState<FeedItem[]>([]);
   const [galleryStats, setGalleryStats] = useState<{ totalItems?: number; byContentType?: Record<string, number> } | null>(null);
   const [isLoadingGallery, setIsLoadingGallery] = useState(true);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const [galleryAgents, setGalleryAgents] = useState<AgentItemFromGallery[]>([]);
+  const [modelFilter, setModelFilter] = useState<string>("");
+  const [availableModels, setAvailableModels] = useState<{ modelId: string; displayName: string }[]>([]);
+  const nextPageRef = useRef(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadMoreLoading, setLoadMoreLoading] = useState(false);
+  const [galleryError, setGalleryError] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<"createdAt" | "rating">("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-  const fetchGallery = useCallback(async () => {
-    setIsLoadingGallery(true);
+  useEffect(() => {
+    modelRegistryAPI.getModels().then((data) => {
+      const image = data.image ?? [];
+      const video = data.video ?? [];
+      const combined = [...image, ...video.filter((v) => !image.some((i) => i.modelId === v.modelId))];
+      setAvailableModels(combined.map((m) => ({ modelId: m.modelId, displayName: m.displayName || m.modelId })));
+    }).catch(() => {});
+  }, []);
+
+  const fetchGallery = useCallback(async (append = false) => {
+    if (!append) {
+      setIsLoadingGallery(true);
+      setGalleryError(null);
+      nextPageRef.current = 1;
+    } else {
+      setLoadMoreLoading(true);
+    }
+    const pageToFetch = append ? nextPageRef.current : 1;
     try {
       const isAuth = authAPI.isAuthenticated();
+      const baseParams = {
+        page: pageToFetch,
+        limit: 20,
+        sortBy,
+        sortOrder,
+        ...(modelFilter && { modelId: modelFilter }),
+      };
+      const contentTypeMap = {
+        images: undefined as const,
+        videos: "video" as const,
+        agents: "llm" as const,
+      };
+      const galleryParams = {
+        ...baseParams,
+        ...(isAuth && visibilityFilter !== "all" && { isPrivate: visibilityFilter === "private" }),
+        ...(contentTypeMap[activeTab] && { contentType: contentTypeMap[activeTab] }),
+      };
+      const publicParams = {
+        ...baseParams,
+        ...(contentTypeMap[activeTab] && { contentType: contentTypeMap[activeTab] }),
+      };
       const [res, statsRes] = await Promise.all([
         isAuth
-          ? galleryAPI.getMyGallery({ limit: 50, sortBy: "createdAt", sortOrder: "desc" })
-          : galleryAPI.getPublicGallery({ limit: 50, sortBy: "createdAt", sortOrder: "desc" }),
-        isAuth ? galleryAPI.getMyStats().catch(() => null) : Promise.resolve(null),
+          ? galleryAPI.getMyGallery(galleryParams)
+          : galleryAPI.getPublicGallery(publicParams),
+        isAuth && !append ? galleryAPI.getMyStats().catch(() => null) : Promise.resolve(null),
       ]);
       const allItems = res.items || [];
       const feedItems = allItems
@@ -93,21 +146,51 @@ const DashboardHome = () => {
       const agentItems = allItems
         .map(galleryItemToAgentItem)
         .filter((x): x is AgentItemFromGallery => x !== null);
-      setGalleryItems(feedItems);
-      setGalleryAgents(agentItems);
-      setGalleryStats(statsRes);
-    } catch {
-      setGalleryItems([]);
-      setGalleryAgents([]);
-      setGalleryStats(null);
+      if (append) {
+        setGalleryItems((prev) => [...prev, ...feedItems]);
+        setGalleryAgents((prev) => [...prev, ...agentItems]);
+      } else {
+        setGalleryItems(feedItems);
+        setGalleryAgents(agentItems);
+      }
+      setTotalPages(res.totalPages ?? 1);
+      setHasMore((res.page ?? 1) < (res.totalPages ?? 1));
+      nextPageRef.current = pageToFetch + 1;
+      if (!append && statsRes) setGalleryStats(statsRes);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to load gallery";
+      setGalleryError(msg);
+      if (!append) {
+        setGalleryItems([]);
+        setGalleryAgents([]);
+        setGalleryStats(null);
+      }
+      if (msg.includes("sign in")) {
+        toast.error("Please sign in to view your gallery");
+      }
     } finally {
       setIsLoadingGallery(false);
+      setLoadMoreLoading(false);
     }
-  }, []);
+  }, [visibilityFilter, modelFilter, activeTab, sortBy, sortOrder]);
 
   useEffect(() => {
     fetchGallery();
   }, [fetchGallery]);
+
+  const handleToggleVisibility = async (item: FeedItem) => {
+    if (!item.galleryId || togglingId) return;
+    setTogglingId(item.galleryId);
+    try {
+      await galleryAPI.updateGalleryItem(item.galleryId, { isPrivate: !item.isPrivate });
+      toast.success(item.isPrivate ? "Now visible to everyone" : "Now private");
+      fetchGallery();
+    } catch {
+      toast.error("Failed to update visibility");
+    } finally {
+      setTogglingId(null);
+    }
+  };
 
   const galleryImages = galleryItems.filter((i: FeedItem) => i.type === "image");
   const galleryVideos = galleryItems.filter((i: FeedItem) => i.type === "video");
@@ -143,8 +226,8 @@ const DashboardHome = () => {
   };
 
   const getCurrentItems = () => {
-    if (activeTab === "images") return displayImages.slice(0, 6);
-    if (activeTab === "videos") return displayVideos.slice(0, 6);
+    if (activeTab === "images") return displayImages;
+    if (activeTab === "videos") return displayVideos;
     return [];
   };
 
@@ -282,7 +365,7 @@ const DashboardHome = () => {
         className="space-y-6"
       >
         {/* Tabs */}
-        <div className="flex items-center gap-2 border-b border-border/50">
+        <div className="flex flex-wrap items-center gap-2 border-b border-border/50">
           <button
             onClick={() => setActiveTab("images")}
             className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 ${
@@ -316,6 +399,72 @@ const DashboardHome = () => {
             <Bot className="w-4 h-4" />
             Agents ({displayAgents.length})
           </button>
+          {activeTab !== "agents" && availableModels.length > 0 && (
+            <div className="flex items-center gap-2 ml-2">
+              <select
+                value={modelFilter}
+                onChange={(e) => setModelFilter(e.target.value)}
+                className="text-xs font-medium px-3 py-1.5 rounded-lg bg-secondary/30 border border-border text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              >
+                <option value="">All models</option>
+                {availableModels.map((m) => (
+                  <option key={m.modelId} value={m.modelId}>{m.displayName}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          {activeTab !== "agents" && (
+            <div className="flex items-center gap-1 ml-2">
+              <select
+                value={`${sortBy}-${sortOrder}`}
+                onChange={(e) => {
+                  const [s, o] = e.target.value.split("-") as ["createdAt" | "rating", "asc" | "desc"];
+                  setSortBy(s);
+                  setSortOrder(o);
+                }}
+                className="text-xs font-medium px-3 py-1.5 rounded-lg bg-secondary/30 border border-border text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              >
+                <option value="createdAt-desc">Newest first</option>
+                <option value="createdAt-asc">Oldest first</option>
+                <option value="rating-desc">Highest rated</option>
+                <option value="rating-asc">Lowest rated</option>
+              </select>
+            </div>
+          )}
+          {authAPI.isAuthenticated() && activeTab !== "agents" && (
+            <div className="flex items-center gap-1 ml-2 p-1 rounded-lg bg-secondary/30">
+              <button
+                onClick={() => setVisibilityFilter("all")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  visibilityFilter === "all" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+                title="All"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                All
+              </button>
+              <button
+                onClick={() => setVisibilityFilter("public")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  visibilityFilter === "public" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+                title="Public only"
+              >
+                <Globe className="w-3.5 h-3.5" />
+                Public
+              </button>
+              <button
+                onClick={() => setVisibilityFilter("private")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  visibilityFilter === "private" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+                title="Private only"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                Private
+              </button>
+            </div>
+          )}
           <div className="ml-auto flex items-center gap-1 p-1 rounded-lg bg-secondary/30">
             <button
               onClick={() => setViewMode("grid")}
@@ -341,12 +490,33 @@ const DashboardHome = () => {
         </div>
 
         {/* Content Display */}
+        {galleryError && (
+          <div className="rounded-xl border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive flex items-center justify-between gap-4">
+            <span>{galleryError}</span>
+            {galleryError.includes("sign in") && (
+              <Link href="/auth/sign-in">
+                <Button variant="outline" size="sm">Sign in</Button>
+              </Link>
+            )}
+          </div>
+        )}
         {activeTab === "agents" ? (
           isLoadingGallery ? (
             <div className="flex flex-col items-center justify-center py-16 gap-4">
               <Loader2 className="w-10 h-10 animate-spin text-primary" />
               <p className="text-muted-foreground text-sm">
                 {authAPI.isAuthenticated() ? "Loading your agents..." : "Loading agents..."}
+              </p>
+            </div>
+          ) : displayAgents.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
+              <div className="w-16 h-16 rounded-full bg-secondary/50 flex items-center justify-center">
+                <Bot className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <p className="text-muted-foreground text-sm">
+                {authAPI.isAuthenticated()
+                  ? "No agents yet. Create one to see it here."
+                  : "Sign in to view your agents."}
               </p>
             </div>
           ) : (
@@ -397,6 +567,22 @@ const DashboardHome = () => {
                   {authAPI.isAuthenticated() ? "Loading your creations..." : "Loading gallery..."}
                 </p>
               </div>
+            ) : getCurrentItems().length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
+                <div className="w-16 h-16 rounded-full bg-secondary/50 flex items-center justify-center">
+                  <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <p className="text-muted-foreground text-sm">
+                  {authAPI.isAuthenticated()
+                    ? "No creations yet. Start generating to see them here."
+                    : "Sign in to view your gallery."}
+                </p>
+                {authAPI.isAuthenticated() && (
+                  <Link href="/dashboard/tools">
+                    <Button variant="default" size="sm">Create something</Button>
+                  </Link>
+                )}
+              </div>
             ) : viewMode === "grid" ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
                 {getCurrentItems().map((item) => (
@@ -424,8 +610,26 @@ const DashboardHome = () => {
                       />
                     )}
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity p-2 flex flex-col justify-between">
-                      <div className="flex justify-end">
-                        <div className="bg-black/50 p-1 rounded-lg backdrop-blur-md">
+                      <div className="flex justify-between items-start">
+                        {authAPI.isAuthenticated() && item.galleryId && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 text-white hover:text-white hover:bg-white/20"
+                            onClick={(e) => { e.stopPropagation(); handleToggleVisibility(item); }}
+                            disabled={togglingId === item.galleryId}
+                            title={item.isPrivate ? "Make public" : "Make private"}
+                          >
+                            {togglingId === item.galleryId ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : item.isPrivate ? (
+                              <Lock className="w-3 h-3" />
+                            ) : (
+                              <Globe className="w-3 h-3" />
+                            )}
+                          </Button>
+                        )}
+                        <div className="bg-black/50 p-1 rounded-lg backdrop-blur-md ml-auto">
                           {item.type === 'video' ? <Video className="w-3 h-3 text-white" /> : <ImageIcon className="w-3 h-3 text-white" />}
                         </div>
                       </div>
@@ -482,6 +686,23 @@ const DashboardHome = () => {
                           <Clock className="w-3 h-3" />
                           {formatDate(item.createdAt)}
                         </span>
+                        {authAPI.isAuthenticated() && item.galleryId && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleToggleVisibility(item); }}
+                            disabled={togglingId === item.galleryId}
+                            className="flex items-center gap-1 hover:text-foreground"
+                            title={item.isPrivate ? "Make public" : "Make private"}
+                          >
+                            {togglingId === item.galleryId ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : item.isPrivate ? (
+                              <Lock className="w-3 h-3" />
+                            ) : (
+                              <Globe className="w-3 h-3" />
+                            )}
+                            {item.isPrivate ? "Private" : "Public"}
+                          </button>
+                        )}
                       </div>
                       <div className="flex items-center gap-4 text-xs">
                         <span className="flex items-center gap-1 text-foreground">
@@ -495,6 +716,25 @@ const DashboardHome = () => {
                     </div>
                   </motion.div>
                 ))}
+              </div>
+            )}
+            {activeTab !== "agents" && hasMore && !isLoadingGallery && getCurrentItems().length > 0 && (
+              <div className="flex justify-center pt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => fetchGallery(true)}
+                  disabled={loadMoreLoading}
+                  className="gap-2"
+                >
+                  {loadMoreLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    "Load more"
+                  )}
+                </Button>
               </div>
             )}
           </div>

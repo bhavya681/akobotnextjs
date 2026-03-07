@@ -2694,13 +2694,14 @@ export const modelRegistryAPI = {
 };
 
 // Gallery API
-export type GalleryContentType = "image" | "video" | "image_to_image" | "llm";
+export type GalleryContentType = "image" | "video" | "image_to_image" | "llm" | "audio";
 
 export interface GalleryItem {
   _id: string;
   userId?: string;
   contentType: GalleryContentType;
   prompt?: string;
+  url?: string;
   outputUrl?: string;
   thumbnailUrl?: string;
   modelId?: string;

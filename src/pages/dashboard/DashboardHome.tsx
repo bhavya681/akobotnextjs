@@ -21,6 +21,7 @@ import {
   Lock,
   Globe,
   Eye,
+  Music,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -71,7 +72,7 @@ const defaultStats = [
 type VisibilityFilter = "all" | "public" | "private";
 
 const DashboardHome = () => {
-  const [activeTab, setActiveTab] = useState<"images" | "videos" | "agents">("images");
+  const [activeTab, setActiveTab] = useState<"images" | "videos" | "agents" | "audio">("images");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [visibilityFilter, setVisibilityFilter] = useState<VisibilityFilter>("all");
   const [selectedItem, setSelectedItem] = useState<FeedItem | null>(null);
@@ -123,6 +124,7 @@ const DashboardHome = () => {
         images: undefined,
         videos: "video" as const,
         agents: "llm" as const,
+        audio: "audio" as const,
       };
       const galleryParams = {
         ...baseParams,
@@ -192,10 +194,15 @@ const DashboardHome = () => {
     }
   };
 
-  const galleryImages = galleryItems.filter((i: FeedItem) => i.type === "image");
-  const galleryVideos = galleryItems.filter((i: FeedItem) => i.type === "video");
+  // Deduplicate before creating display arrays. The API can return items with identical mediaUrls but different IDs.
+  const uniqueItems = Array.from(new Map(galleryItems.map(item => [item.mediaUrl, item])).values());
+  const galleryImages = uniqueItems.filter((i: FeedItem) => i.type === "image");
+  const galleryVideos = uniqueItems.filter((i: FeedItem) => i.type === "video");
+  const galleryAudios = uniqueItems.filter((i: FeedItem) => i.type === "audio");
+  
   const displayImages = galleryImages;
   const displayVideos = galleryVideos;
+  const displayAudios = galleryAudios;
   const displayAgents: AgentItem[] = galleryAgents.map((a) => ({ ...a, id: a.id, interactions: a.interactions }));
 
   const handleLike = (id: number | string) => {
@@ -228,6 +235,7 @@ const DashboardHome = () => {
   const getCurrentItems = () => {
     if (activeTab === "images") return displayImages;
     if (activeTab === "videos") return displayVideos;
+    if (activeTab === "audio") return displayAudios;
     return [];
   };
 
@@ -398,6 +406,17 @@ const DashboardHome = () => {
           >
             <Bot className="w-4 h-4" />
             Agents ({displayAgents.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("audio")}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 ${
+              activeTab === "audio"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Music className="w-4 h-4" />
+            Audio ({displayAudios.length})
           </button>
           {activeTab !== "agents" && availableModels.length > 0 && (
             <div className="flex items-center gap-2 ml-2">
@@ -602,6 +621,17 @@ const DashboardHome = () => {
                         onMouseEnter={(e) => e.currentTarget.play()}
                         onMouseLeave={(e) => e.currentTarget.pause()}
                       />
+                    ) : item.type === "audio" ? (
+                      <div className="w-full h-full bg-secondary/50 flex flex-col items-center justify-center p-4">
+                        <Music className="w-8 h-8 text-primary/50 mb-4" />
+                        <audio
+                          src={item.mediaUrl}
+                          controls
+                          className="w-[90%] h-10 relative z-20"
+                          onClick={(e) => e.stopPropagation()}
+                          controlsList="nodownload"
+                        />
+                      </div>
                     ) : (
                       <img
                         src={item.mediaUrl}
@@ -630,7 +660,7 @@ const DashboardHome = () => {
                           </Button>
                         )}
                         <div className="bg-black/50 p-1 rounded-lg backdrop-blur-md ml-auto">
-                          {item.type === 'video' ? <Video className="w-3 h-3 text-white" /> : <ImageIcon className="w-3 h-3 text-white" />}
+                          {item.type === 'video' ? <Video className="w-3 h-3 text-white" /> : item.type === 'audio' ? <Music className="w-3 h-3 text-white" /> : <ImageIcon className="w-3 h-3 text-white" />}
                         </div>
                       </div>
                       <div className="space-y-1">
@@ -668,6 +698,18 @@ const DashboardHome = () => {
                           className="w-full h-full object-cover"
                           muted
                         />
+                      ) : item.type === "audio" ? (
+                        <div 
+                          className="w-full h-full flex items-center justify-center text-muted-foreground relative z-20" 
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <audio 
+                            src={item.mediaUrl} 
+                            controls 
+                            className="w-[90%] h-10 mt-2"
+                            controlsList="nodownload"
+                          />
+                        </div>
                       ) : (
                         <img
                           src={item.mediaUrl}
@@ -764,6 +806,8 @@ const DashboardHome = () => {
         onSave={handleSave}
         onShare={handleShare}
         onOpenComments={handleOpenComments}
+        onToggleVisibility={handleToggleVisibility}
+        togglingId={togglingId}
       />
     </div>
   );

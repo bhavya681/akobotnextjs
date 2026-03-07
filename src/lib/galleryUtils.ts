@@ -35,14 +35,15 @@ export function galleryItemToAgentItem(g: GalleryItem): AgentItemFromGallery | n
 export function galleryItemToFeedItem(g: GalleryItem): FeedItem | null {
   const isVideo = g.contentType === "video";
   const isImage = g.contentType === "image" || g.contentType === "image_to_image";
-  if (!isVideo && !isImage) return null; // Skip llm content type for visual feed
+  const isAudio = g.contentType === "audio";
+  if (!isVideo && !isImage && !isAudio) return null; // Skip llm content type for visual feed
 
-  const mediaUrl = g.outputUrl || g.thumbnailUrl || "";
+  const mediaUrl = g.url || g.outputUrl || g.thumbnailUrl || "";
   if (!mediaUrl) return null;
 
   return {
     id: g._id,
-    type: isVideo ? "video" : "image",
+    type: isVideo ? "video" : isAudio ? "audio" : "image",
     mediaUrl,
     thumbnailUrl: g.thumbnailUrl || (isVideo ? mediaUrl : undefined),
     prompt: g.prompt || "AI generated",

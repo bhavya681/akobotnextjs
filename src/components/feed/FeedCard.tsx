@@ -5,13 +5,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Heart, MessageCircle, Share2, Download, Bookmark, 
   MoreHorizontal, Copy, Flag, UserPlus, Play, Pause,
-  Volume2, VolumeX, Send
+  Volume2, VolumeX, Send, Lock, Globe, Loader2
 } from "lucide-react";
 import { toast } from "sonner";
 
 export interface FeedItem {
   id: number | string;
-  type: "image" | "video";
+  type: "image" | "video" | "audio";
   mediaUrl: string;
   thumbnailUrl?: string;
   prompt: string;
@@ -43,6 +43,8 @@ interface FeedCardProps {
   onFollow: (id: number | string) => void;
   onOpenComments: (id: number | string) => void;
   onOpenReels?: (id: number | string) => void;
+  onToggleVisibility?: (item: FeedItem) => void;
+  togglingId?: string | null;
 }
 
 const FeedCard = ({ 
@@ -52,7 +54,9 @@ const FeedCard = ({
   onShare, 
   onFollow,
   onOpenComments,
-  onOpenReels
+  onOpenReels,
+  onToggleVisibility,
+  togglingId
 }: FeedCardProps) => {
   const [showMenu, setShowMenu] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -153,6 +157,24 @@ const FeedCard = ({
                   exit={{ opacity: 0, scale: 0.95 }}
                   className="absolute right-0 top-full mt-1 w-48 glass-card rounded-xl overflow-hidden z-50"
                 >
+                  {onToggleVisibility && item.galleryId && (
+                    <button
+                      onClick={() => {
+                        onToggleVisibility(item);
+                        setShowMenu(false);
+                      }}
+                      disabled={togglingId === item.galleryId}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-secondary/50 transition-colors"
+                    >
+                      {togglingId === item.galleryId ? (
+                        <><Loader2 className="w-4 h-4 animate-spin" /> Toggling...</>
+                      ) : item.isPrivate ? (
+                        <><Globe className="w-4 h-4" /> Make Public</>
+                      ) : (
+                        <><Lock className="w-4 h-4" /> Make Private</>
+                      )}
+                    </button>
+                  )}
                   <button
                     onClick={handleCopyPrompt}
                     className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-secondary/50 transition-colors"

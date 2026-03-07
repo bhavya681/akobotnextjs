@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   X, Heart, MessageCircle, Share2, Download, Bookmark, 
-  Copy, ChevronLeft, ChevronRight, User
+  Copy, ChevronLeft, ChevronRight, User, Globe, Lock, Loader2
 } from "lucide-react";
 import { toast } from "sonner";
 import { FeedItem } from "./FeedCard";
@@ -18,6 +18,8 @@ interface ImageDetailModalProps {
   onNext?: () => void;
   hasPrev?: boolean;
   hasNext?: boolean;
+  onToggleVisibility?: (item: FeedItem) => void;
+  togglingId?: string | null;
 }
 
 const ImageDetailModal = ({ 
@@ -31,7 +33,9 @@ const ImageDetailModal = ({
   onPrev,
   onNext,
   hasPrev,
-  hasNext
+  hasNext,
+  onToggleVisibility,
+  togglingId
 }: ImageDetailModalProps) => {
   if (!item) return null;
 
@@ -130,7 +134,28 @@ const ImageDetailModal = ({
               {/* Prompt */}
               <div className="flex-1 p-3 sm:p-4 overflow-y-auto">
                 <h4 className="text-xs sm:text-sm font-medium text-muted-foreground mb-2">Prompt</h4>
-                <p className="text-sm sm:text-base text-foreground leading-relaxed">{item.prompt}</p>
+                <p className="text-sm sm:text-base text-foreground leading-relaxed mb-4">{item.prompt}</p>
+                
+                {onToggleVisibility && item.galleryId && (
+                  <div className="pt-4 border-t border-border">
+                    <button
+                      onClick={() => onToggleVisibility(item)}
+                      disabled={togglingId === item.galleryId}
+                      className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-secondary/50 hover:bg-secondary rounded-lg transition-colors text-sm text-foreground"
+                    >
+                      {togglingId === item.galleryId ? (
+                        <><Loader2 className="w-4 h-4 animate-spin" /> Updating...</>
+                      ) : item.isPrivate ? (
+                        <><Globe className="w-4 h-4 text-green-500" /> Make Public</>
+                      ) : (
+                        <><Lock className="w-4 h-4 text-yellow-500" /> Make Private</>
+                      )}
+                    </button>
+                    <p className="text-xs text-muted-foreground text-center mt-2">
+                      {item.isPrivate ? "Only you can see this creation" : "This creation is visible to everyone"}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Actions */}

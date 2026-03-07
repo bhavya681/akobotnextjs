@@ -71,7 +71,6 @@ import {
 import {
   ChartContainer,
   ChartTooltip,
-  ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
 import { cn } from "@/lib/utils";
@@ -436,7 +435,7 @@ const ToolsPage = () => {
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" vertical={false} />
                   <XAxis dataKey="day" tickLine={false} axisLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
                   <YAxis tickLine={false} axisLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <ChartTooltip />
                   <Line type="monotone" dataKey="open" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
                   <Line type="monotone" dataKey="inProgress" stroke="hsl(199 95% 48%)" strokeWidth={2} dot={false} />
                   <Line type="monotone" dataKey="resolved" stroke="hsl(142 76% 36%)" strokeWidth={2} dot={false} />
@@ -463,7 +462,7 @@ const ToolsPage = () => {
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" vertical={false} />
                   <XAxis dataKey="day" tickLine={false} axisLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
                   <YAxis tickLine={false} axisLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <ChartTooltip />
                   <Area type="monotone" dataKey="total" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#fillTotal)" />
                 </AreaChart>
               </ChartContainer>
@@ -491,7 +490,7 @@ const ToolsPage = () => {
                     fontSize: "12px",
                   }}
                   labelStyle={{ color: "hsl(var(--foreground))" }}
-                  formatter={(value: number) => [value, "Count"]}
+                  formatter={(value: number | undefined) => [value ?? 0, "Count"]}
                 />
                 <Bar dataKey="count" radius={[0, 4, 4, 0]} fill="hsl(var(--primary))" />
               </BarChart>

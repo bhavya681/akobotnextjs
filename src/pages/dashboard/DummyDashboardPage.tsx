@@ -24,7 +24,6 @@ import {
 import {
   ChartContainer,
   ChartTooltip,
-  ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
 import {
@@ -249,7 +248,7 @@ export default function DummyDashboardPage() {
                     axisLine={false}
                     tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
                   />
-                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <ChartTooltip />
                   <Line
                     type="monotone"
                     dataKey="generations"
@@ -324,7 +323,7 @@ export default function DummyDashboardPage() {
                     axisLine={false}
                     tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
                   />
-                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <ChartTooltip />
                   <Area
                     type="monotone"
                     dataKey="value"
@@ -388,7 +387,7 @@ export default function DummyDashboardPage() {
                     fontSize: "12px",
                   }}
                   labelStyle={{ color: "hsl(var(--foreground))" }}
-                  formatter={(value: number) => [value.toLocaleString(), "Count"]}
+                  formatter={(value: number | undefined) => [(value ?? 0).toLocaleString(), "Count"]}
                 />
                 <Bar dataKey="count" radius={[0, 4, 4, 0]} fill="hsl(var(--primary))" />
               </BarChart>

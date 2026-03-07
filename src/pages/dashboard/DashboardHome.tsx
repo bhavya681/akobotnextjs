@@ -120,7 +120,7 @@ const DashboardHome = () => {
         ...(modelFilter && { modelId: modelFilter }),
       };
       const contentTypeMap = {
-        images: undefined as const,
+        images: undefined,
         videos: "video" as const,
         agents: "llm" as const,
       };
@@ -718,7 +718,7 @@ const DashboardHome = () => {
                 ))}
               </div>
             )}
-            {activeTab !== "agents" && hasMore && !isLoadingGallery && getCurrentItems().length > 0 && (
+            {hasMore && !isLoadingGallery && getCurrentItems().length > 0 && (
               <div className="flex justify-center pt-6">
                 <Button
                   variant="outline"

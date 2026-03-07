@@ -2,6 +2,19 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
 import { 
   Search,
   Ticket,
@@ -22,6 +35,8 @@ import {
   ArrowRight,
   BarChart3,
   ExternalLink,
+  LayoutDashboard,
+  AlertCircle,
 } from "lucide-react";
 import {
   Dialog,
@@ -53,13 +68,49 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
 import { cn } from "@/lib/utils";
 
-type TabType = "Tickets" | "Featuring" | "Itome" | "Flipaty" | "Cominany";
+type TabType = "Dashboard" | "Tickets" | "Featuring" | "Itome" | "Flipaty" | "Cominany";
+
+const dashboardTimeRanges = [
+  { value: "24h", label: "Last 24 hours" },
+  { value: "7d", label: "Last 7 days" },
+  { value: "30d", label: "Last 30 days" },
+];
+
+const ticketTrendData = [
+  { day: "Mon", open: 12, inProgress: 5, resolved: 8 },
+  { day: "Tue", open: 15, inProgress: 7, resolved: 12 },
+  { day: "Wed", open: 10, inProgress: 6, resolved: 15 },
+  { day: "Thu", open: 18, inProgress: 8, resolved: 10 },
+  { day: "Fri", open: 14, inProgress: 9, resolved: 18 },
+  { day: "Sat", open: 8, inProgress: 4, resolved: 6 },
+  { day: "Sun", open: 11, inProgress: 5, resolved: 9 },
+];
+
+const ticketStatusData = [
+  { status: "Open", count: 12, fill: "hsl(var(--primary))" },
+  { status: "In Progress", count: 7, fill: "hsl(199 95% 48%)" },
+  { status: "Resolved", count: 18, fill: "hsl(142 76% 36%)" },
+  { status: "Pending", count: 3, fill: "hsl(38 92% 50%)" },
+];
+
+const ticketChartConfig = {
+  open: { label: "Open", color: "hsl(var(--primary))" },
+  inProgress: { label: "In Progress", color: "hsl(199 95% 48%)" },
+  resolved: { label: "Resolved", color: "hsl(142 76% 36%)" },
+} satisfies ChartConfig;
 
 const ToolsPage = () => {
   const [activeTopTab, setActiveTopTab] = useState<TabType>("Tickets");
   const [searchQuery, setSearchQuery] = useState("");
+  const [dashboardTimeRange, setDashboardTimeRange] = useState("7d");
 
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   const [isFeatureModalOpen, setIsFeatureModalOpen] = useState(false);
@@ -294,6 +345,203 @@ const ToolsPage = () => {
       default:
         return "bg-muted text-muted-foreground border-border";
     }
+  };
+
+  const renderDashboardContent = () => {
+    const dashboardStats = [
+      { label: "Open Tickets", value: "12", change: "+2", trend: "up", icon: Ticket, color: "text-amber-500", bgColor: "bg-amber-500/10 dark:bg-amber-500/20" },
+      { label: "In Progress", value: "7", change: "-1", trend: "down", icon: Clock, color: "text-blue-500", bgColor: "bg-blue-500/10 dark:bg-blue-500/20" },
+      { label: "Resolved", value: "18", change: "+5", trend: "up", icon: CheckCircle2, color: "text-emerald-500", bgColor: "bg-emerald-500/10 dark:bg-emerald-500/20" },
+      { label: "High Priority", value: "3", change: "0", trend: "neutral", icon: AlertCircle, color: "text-rose-500", bgColor: "bg-rose-500/10 dark:bg-rose-500/20" },
+    ];
+
+    return (
+      <div className="space-y-6">
+        {/* Dashboard Header - Grafana style */}
+        <div className="border-b border-border bg-card/50 dark:bg-card/30 backdrop-blur-sm rounded-lg p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10 dark:bg-primary/20">
+                <LayoutDashboard className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-foreground">Tickets Dashboard</h2>
+                <p className="text-sm text-muted-foreground">Overview of support tickets and metrics</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground hidden sm:inline">Time range</span>
+              <Select value={dashboardTimeRange} onValueChange={setDashboardTimeRange}>
+                <SelectTrigger className="w-[160px] h-9 border-border bg-background/80 dark:bg-background/50">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {dashboardTimeRanges.map((r) => (
+                    <SelectItem key={r.value} value={r.value}>
+                      {r.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        {/* Stat cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {dashboardStats.map((stat, idx) => {
+            const Icon = stat.icon;
+            return (
+              <div
+                key={idx}
+                className={cn(
+                  "rounded-lg border border-border bg-card dark:bg-card/80",
+                  "p-4 shadow-sm hover:shadow-md transition-shadow",
+                  "dark:border-border/80"
+                )}
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
+                    <p className="text-2xl font-bold text-foreground mt-1">{stat.value}</p>
+                    <p
+                      className={cn(
+                        "text-xs font-medium mt-1",
+                        stat.trend === "up" ? "text-emerald-600 dark:text-emerald-400" : stat.trend === "down" ? "text-rose-600 dark:text-rose-400" : "text-muted-foreground"
+                      )}
+                    >
+                      {stat.change} from previous period
+                    </p>
+                  </div>
+                  <div className={cn("p-2.5 rounded-lg", stat.bgColor, stat.color)}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Charts grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Tickets over time */}
+          <div className={cn("rounded-lg border border-border bg-card dark:bg-card/80 overflow-hidden shadow-sm dark:border-border/80")}>
+            <div className="px-4 py-3 border-b border-border bg-muted/30 dark:bg-muted/10">
+              <h3 className="text-sm font-semibold text-foreground">Tickets Over Time</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Daily ticket activity by status</p>
+            </div>
+            <div className="p-4 h-[280px]">
+              <ChartContainer config={ticketChartConfig} className="h-full w-full">
+                <LineChart data={ticketTrendData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" vertical={false} />
+                  <XAxis dataKey="day" tickLine={false} axisLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                  <YAxis tickLine={false} axisLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Line type="monotone" dataKey="open" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="inProgress" stroke="hsl(199 95% 48%)" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="resolved" stroke="hsl(142 76% 36%)" strokeWidth={2} dot={false} />
+                </LineChart>
+              </ChartContainer>
+            </div>
+          </div>
+
+          {/* Tickets by status - Area */}
+          <div className={cn("rounded-lg border border-border bg-card dark:bg-card/80 overflow-hidden shadow-sm dark:border-border/80")}>
+            <div className="px-4 py-3 border-b border-border bg-muted/30 dark:bg-muted/10">
+              <h3 className="text-sm font-semibold text-foreground">Weekly Trend</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Total tickets per day</p>
+            </div>
+            <div className="p-4 h-[280px]">
+              <ChartContainer config={{ resolved: { label: "Resolved", color: "hsl(var(--primary))" } }} className="h-full w-full">
+                <AreaChart data={ticketTrendData.map((d) => ({ ...d, total: d.open + d.inProgress + d.resolved }))} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                  <defs>
+                    <linearGradient id="fillTotal" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" vertical={false} />
+                  <XAxis dataKey="day" tickLine={false} axisLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                  <YAxis tickLine={false} axisLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Area type="monotone" dataKey="total" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#fillTotal)" />
+                </AreaChart>
+              </ChartContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Tickets by status - Bar chart */}
+        <div className={cn("rounded-lg border border-border bg-card dark:bg-card/80 overflow-hidden shadow-sm dark:border-border/80")}>
+          <div className="px-4 py-3 border-b border-border bg-muted/30 dark:bg-muted/10">
+            <h3 className="text-sm font-semibold text-foreground">Tickets by Status</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">Current distribution</p>
+          </div>
+          <div className="p-4 h-[260px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={ticketStatusData} layout="vertical" margin={{ top: 5, right: 20, left: 5, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" horizontal={false} />
+                <XAxis type="number" tickLine={false} axisLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                <YAxis type="category" dataKey="status" tickLine={false} axisLine={false} width={90} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "var(--radius)",
+                    fontSize: "12px",
+                  }}
+                  labelStyle={{ color: "hsl(var(--foreground))" }}
+                  formatter={(value: number) => [value, "Count"]}
+                />
+                <Bar dataKey="count" radius={[0, 4, 4, 0]} fill="hsl(var(--primary))" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Recent tickets table */}
+        <Card className="border border-border shadow-sm dark:border-border/80">
+          <CardHeader className="pb-4 border-b border-border">
+            <CardTitle>Recent Tickets</CardTitle>
+            <CardDescription>Latest support tickets</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-b border-border hover:bg-muted/50">
+                    <TableHead className="font-semibold">ID</TableHead>
+                    <TableHead className="font-semibold">Title</TableHead>
+                    <TableHead className="font-semibold">Status</TableHead>
+                    <TableHead className="font-semibold">Priority</TableHead>
+                    <TableHead className="font-semibold">Created</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {ticketsData.slice(0, 5).map((ticket) => (
+                    <TableRow key={ticket.id} className="border-b border-border hover:bg-muted/50">
+                      <TableCell className="font-medium">{ticket.id}</TableCell>
+                      <TableCell>{ticket.title}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={cn("text-xs border", getStatusColor(ticket.status))}>
+                          {ticket.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={cn("text-xs border", getPriorityColor(ticket.priority))}>
+                          {ticket.priority}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{ticket.created}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   };
 
   const renderTicketsContent = () => (
@@ -928,10 +1176,13 @@ const ToolsPage = () => {
     { id: "Itome", label: "Report", icon: DollarSign },
     { id: "Flipaty", label: "Pricing", icon: Tag },
     { id: "Cominany", label: "Company", icon: Building2 },
+    { id: "Dashboard", label: "Dashboard", icon: LayoutDashboard },
   ];
 
   const renderContent = () => {
     switch (activeTopTab) {
+      case "Dashboard":
+        return renderDashboardContent();
       case "Tickets":
         return renderTicketsContent();
       case "Featuring":

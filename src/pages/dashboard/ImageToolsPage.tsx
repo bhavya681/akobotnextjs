@@ -79,6 +79,12 @@ const FALLBACK_IMAGE_MODELS: { id: string; name: string; description: string; ba
   { id: "dalle-3", name: "DALL-E 3", description: "OpenAI's latest model", badge: "Premium" },
 ];
 
+const IMAGE_TO_IMAGE_MODELS: { id: string; name: string; description: string; badge: string | null }[] = [
+  { id: "flux", name: "flux", description: "Base image to image generation", badge: null },
+  { id: "flux-kontext-dev", name: "flux-kontext-dev", description: "Advanced context understanding", badge: "New" },
+  { id: "flux-kontext-pro", name: "flux-kontext-pro", description: "Professional generation", badge: "Pro" },
+];
+
 // Styles
 const styles = [
   { id: "dynamic", name: "Dynamic" },
@@ -154,6 +160,20 @@ const ImageToolsPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [modelPickerOpen, setModelPickerOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const currentAvailableModels = toolMode === "image2image" ? IMAGE_TO_IMAGE_MODELS : imageModels;
+
+  useEffect(() => {
+    if (toolMode === "image2image") {
+      if (!IMAGE_TO_IMAGE_MODELS.some(m => m.id === selectedModel)) {
+        setSelectedModel(IMAGE_TO_IMAGE_MODELS[0].id);
+      }
+    } else {
+      if (!imageModels.some(m => m.id === selectedModel) && imageModels.length > 0) {
+        setSelectedModel(imageModels[0].id);
+      }
+    }
+  }, [toolMode, imageModels]);
 
   useEffect(() => {
     let cancelled = false;
@@ -609,15 +629,15 @@ const ImageToolsPage = () => {
                   <PopoverTrigger asChild>
                     <button
                       type="button"
-                      disabled={imageModelsLoading}
+                      disabled={imageModelsLoading && toolMode !== "image2image"}
                       className="w-full h-12 rounded-[10px] bg-secondary border border-border flex items-center justify-between gap-2 px-4 text-left hover:bg-accent transition-all disabled:opacity-70"
                     >
                       <span className="font-semibold text-base text-foreground truncate">
-                        {imageModelsLoading ? "Loading models..." : (imageModels.find((m) => m.id === selectedModel)?.name ?? selectedModel)}
+                        {imageModelsLoading && toolMode !== "image2image" ? "Loading models..." : (currentAvailableModels.find((m) => m.id === selectedModel)?.name ?? selectedModel)}
                       </span>
-                      {imageModels.find((m) => m.id === selectedModel)?.badge && (
+                      {currentAvailableModels.find((m) => m.id === selectedModel)?.badge && (
                         <Badge className="text-[9px] h-5 bg-primary/10 text-primary border-0 shrink-0">
-                          {imageModels.find((m) => m.id === selectedModel)?.badge}
+                          {currentAvailableModels.find((m) => m.id === selectedModel)?.badge}
                         </Badge>
                       )}
                       <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -633,7 +653,7 @@ const ImageToolsPage = () => {
                       <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Choose model</span>
                     </div>
                     <div className="max-h-[320px] overflow-y-auto p-2 space-y-1.5">
-                      {imageModels.map((model) => {
+                      {currentAvailableModels.map((model) => {
                         const isSelected = selectedModel === model.id;
                         return (
                           <button

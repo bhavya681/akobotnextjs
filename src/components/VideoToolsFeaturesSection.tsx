@@ -66,9 +66,14 @@ const VideoToolsFeaturesSection = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-[2.5rem] md:text-5xl lg:text-6xl font-black tracking-tighter leading-tight text-foreground mb-2">
-              Video Tool <span className="gradient-text">Showcase</span>
-            </h2>
+            <div className="flex flex-wrap items-center gap-5 mb-2">
+              <h2 className="text-[2.5rem] md:text-5xl lg:text-6xl font-black tracking-tighter leading-tight text-foreground">
+                Video Tool <span className="gradient-text">Showcase</span>
+              </h2>
+              <span className="px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 text-white text-base font-bold shadow-lg shadow-purple-500/25">
+                Coming Soon
+              </span>
+            </div>
             <p className="mt-1 text-base font-light text-muted-foreground max-w-2xl hidden md:block">
               Slow-scrolling cinematic previews of our core AI video capabilities.
             </p>

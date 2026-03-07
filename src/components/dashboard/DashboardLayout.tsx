@@ -21,6 +21,7 @@ import {
   Moon,
   Store,
   Briefcase,
+  BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/Logo";
@@ -36,7 +37,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/use-auth";
 
 const navItems = [
-  { path: "/dashboard", icon: Home, label: "Dashboard" },
+  { path: "/dashboard", icon: Home, label: "Home" },
   { path: "/dashboard/feed", icon: Compass, label: "Feed" },
   { path: "/dashboard/support", icon: HelpCircle, label: "Support" },
 ];
@@ -44,7 +45,7 @@ const navItems = [
 const toolsSubItems = [
   { path: "/dashboard/tools-old/agent", icon: MessageSquare, label: "Agent LLM" },
   { path: "/dashboard/tools-old/image", icon: ImageIcon, label: "Image" },
-  // { path: "/dashboard/tools-old/video", icon: Video, label: "Video" },
+  { path: "/dashboard/tools-old/video", icon: Video, label: "Video" },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -131,7 +132,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             {/* Navigation - Icon Only with Tooltips */}
             <nav className="flex-1 px-1.5 sm:px-2 py-4 sm:py-6 space-y-1 overflow-y-auto">
-              {/* 1. Dashboard */}
+              {/* 1. Home */}
               {navItems.filter(item => item.path === "/dashboard").map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.path;
@@ -205,7 +206,73 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 );
               })}
 
-              {/* 2. Feed */}
+              {/* 2. Analytics Dashboard */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link
+                    href="/dashboard/analytics"
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full transition-all ${
+                      pathname === "/dashboard/analytics"
+                        ? "gradient-active-nav text-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50 dark:hover:bg-accent/50"
+                    }`}
+                  >
+                    <motion.div
+                      whileHover={{ scale: 1.15, rotate: 5 }}
+                      whileTap={{ scale: 0.85, rotate: -5 }}
+                      className="relative"
+                      animate={pathname === "/dashboard/analytics" ? {
+                        scale: [1, 1.2, 1],
+                        rotate: [0, 5, -5, 0],
+                      } : {}}
+                      transition={{
+                        duration: 0.3,
+                        ease: 'easeInOut',
+                      }}
+                    >
+                      <BarChart3 className={`w-4 h-4 sm:w-5 sm:h-5 stroke-2 transition-all ${pathname === "/dashboard/analytics" ? 'text-primary dark:text-primary font-semibold' : 'text-foreground/70 dark:text-foreground/70 font-medium hover:text-foreground dark:hover:text-foreground'}`} />
+                      {pathname === "/dashboard/analytics" && (
+                        <motion.div
+                          className="absolute inset-0 rounded-full bg-primary/20 dark:bg-primary/30 blur-md"
+                          animate={{
+                            opacity: [0.3, 0.6, 0.3],
+                            scale: [1, 1.2, 1],
+                          }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: 'easeInOut',
+                          }}
+                        />
+                      )}
+                      <motion.div
+                        className="absolute inset-0 rounded-full bg-primary/20 dark:bg-primary/30 blur-xl"
+                        initial={{ scale: 0, opacity: 0 }}
+                        whileTap={{
+                          scale: [0, 2, 2.5, 0],
+                          opacity: [0, 1, 0.8, 0]
+                        }}
+                        transition={{ duration: 0.6, ease: "easeOut" }}
+                      />
+                      <motion.div
+                        className="absolute inset-0 rounded-full border-2 border-primary/50"
+                        initial={{ scale: 1, opacity: 0 }}
+                        whileTap={{
+                          scale: [1, 2, 2.5],
+                          opacity: [0, 0.9, 0]
+                        }}
+                        transition={{ duration: 0.5, ease: "easeOut" }}
+                      />
+                    </motion.div>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p>Analytics</p>
+                </TooltipContent>
+              </Tooltip>
+
+              {/* 3. Feed */}
               {navItems.filter(item => item.path === "/dashboard/feed").map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.path;

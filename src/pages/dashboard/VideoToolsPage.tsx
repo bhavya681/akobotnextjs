@@ -45,8 +45,8 @@ import { useRouter } from "next/navigation";
 
 const videoModes = [
   { id: "text-to-video", label: "Text to Video", icon: Video, color: "from-orange-500 to-red-500" },
-  { id: "video-to-video", label: "Video to Video", icon: ArrowLeftRight, color: "from-blue-500 to-cyan-500" },
-  { id: "enhance", label: "Enhance", icon: Wand2, color: "from-pink-500 to-rose-500" },
+  // { id: "video-to-video", label: "Video to Video", icon: ArrowLeftRight, color: "from-blue-500 to-cyan-500" },
+  // { id: "enhance", label: "Enhance", icon: Wand2, color: "from-pink-500 to-rose-500" },
 ];
 
 const FALLBACK_VIDEO_MODELS = [

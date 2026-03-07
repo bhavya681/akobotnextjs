@@ -183,12 +183,35 @@ const DashboardHome = () => {
   const handleToggleVisibility = async (item: FeedItem) => {
     if (!item.galleryId || togglingId) return;
     setTogglingId(item.galleryId);
+    const newIsPrivate = !item.isPrivate;
+
+    // Optimistic update: flip visibility in local state immediately
+    setGalleryItems((prev) => {
+      const updated = prev.map((i) =>
+        i.galleryId === item.galleryId ? { ...i, isPrivate: newIsPrivate } : i
+      );
+      // If viewing filtered tab, remove item that no longer matches
+      if (visibilityFilter === "public" && newIsPrivate) {
+        return updated.filter((i) => i.galleryId !== item.galleryId);
+      }
+      if (visibilityFilter === "private" && !newIsPrivate) {
+        return updated.filter((i) => i.galleryId !== item.galleryId);
+      }
+      return updated;
+    });
+    // Update modal item if it's the one being toggled
+    if (selectedItem?.galleryId === item.galleryId) {
+      setSelectedItem({ ...selectedItem, isPrivate: newIsPrivate });
+    }
+
     try {
-      await galleryAPI.updateGalleryItem(item.galleryId, { isPrivate: !item.isPrivate });
+      await galleryAPI.updateGalleryItem(item.galleryId, { isPrivate: newIsPrivate });
       toast.success(item.isPrivate ? "Now visible to everyone" : "Now private");
       fetchGallery();
     } catch {
       toast.error("Failed to update visibility");
+      // Revert: refetch to restore correct state
+      fetchGallery();
     } finally {
       setTogglingId(null);
     }
@@ -204,6 +227,20 @@ const DashboardHome = () => {
   const displayVideos = galleryVideos;
   const displayAudios = galleryAudios;
   const displayAgents: AgentItem[] = galleryAgents.map((a) => ({ ...a, id: a.id, interactions: a.interactions }));
+
+  // Use galleryStats for tab counts when available (real totals), else fall back to displayed items
+  const imagesCount = authAPI.isAuthenticated() && galleryStats?.byContentType
+    ? (galleryStats.byContentType.image ?? 0) + (galleryStats.byContentType.image_to_image ?? 0)
+    : displayImages.length;
+  const videosCount = authAPI.isAuthenticated() && galleryStats?.byContentType
+    ? (galleryStats.byContentType.video ?? 0)
+    : displayVideos.length;
+  const audioCount = authAPI.isAuthenticated() && galleryStats?.byContentType
+    ? (galleryStats.byContentType.audio ?? 0)
+    : displayAudios.length;
+  const agentsCount = authAPI.isAuthenticated() && galleryStats?.byContentType
+    ? (galleryStats.byContentType.llm ?? displayAgents.length)
+    : displayAgents.length;
 
   const handleLike = (id: number | string) => {
     toast.success("Liked!");
@@ -372,8 +409,8 @@ const DashboardHome = () => {
         transition={{ delay: 0.3 }}
         className="space-y-6"
       >
-        {/* Tabs */}
-        <div className="flex flex-wrap items-center gap-2 border-b border-border/50">
+        {/* Main content type tabs */}
+        <div className="flex flex-wrap items-center gap-2 border-b border-border/50 pb-2">
           <button
             onClick={() => setActiveTab("images")}
             className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 ${
@@ -383,7 +420,7 @@ const DashboardHome = () => {
             }`}
           >
             <ImageIcon className="w-4 h-4" />
-            Images ({displayImages.length})
+            Images ({imagesCount})
           </button>
           <button
             onClick={() => setActiveTab("videos")}
@@ -394,7 +431,7 @@ const DashboardHome = () => {
             }`}
           >
             <Video className="w-4 h-4" />
-            Videos ({displayVideos.length})
+            Videos ({videosCount})
           </button>
           <button
             onClick={() => setActiveTab("agents")}
@@ -405,7 +442,7 @@ const DashboardHome = () => {
             }`}
           >
             <Bot className="w-4 h-4" />
-            Agents ({displayAgents.length})
+            Agents ({agentsCount})
           </button>
           <button
             onClick={() => setActiveTab("audio")}
@@ -416,7 +453,7 @@ const DashboardHome = () => {
             }`}
           >
             <Music className="w-4 h-4" />
-            Audio ({displayAudios.length})
+            Audio ({audioCount})
           </button>
           {activeTab !== "agents" && availableModels.length > 0 && (
             <div className="flex items-center gap-2 ml-2">
@@ -450,40 +487,6 @@ const DashboardHome = () => {
               </select>
             </div>
           )}
-          {authAPI.isAuthenticated() && activeTab !== "agents" && (
-            <div className="flex items-center gap-1 ml-2 p-1 rounded-lg bg-secondary/30">
-              <button
-                onClick={() => setVisibilityFilter("all")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                  visibilityFilter === "all" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                }`}
-                title="All"
-              >
-                <Eye className="w-3.5 h-3.5" />
-                All
-              </button>
-              <button
-                onClick={() => setVisibilityFilter("public")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                  visibilityFilter === "public" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                }`}
-                title="Public only"
-              >
-                <Globe className="w-3.5 h-3.5" />
-                Public
-              </button>
-              <button
-                onClick={() => setVisibilityFilter("private")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                  visibilityFilter === "private" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                }`}
-                title="Private only"
-              >
-                <Lock className="w-3.5 h-3.5" />
-                Private
-              </button>
-            </div>
-          )}
           <div className="ml-auto flex items-center gap-1 p-1 rounded-lg bg-secondary/30">
             <button
               onClick={() => setViewMode("grid")}
@@ -507,6 +510,62 @@ const DashboardHome = () => {
             </button>
           </div>
         </div>
+
+        {/* Public/Private sub-tabs + Create button - inside Images, Videos, Audio */}
+        {activeTab !== "agents" && (
+          <div className="flex flex-wrap items-center gap-4">
+            {authAPI.isAuthenticated() && (
+              <div className="flex items-center gap-1 p-1 rounded-lg bg-muted/30 border border-border/50 w-fit">
+                <button
+                  onClick={() => setVisibilityFilter("all")}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    visibilityFilter === "all" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  title="All"
+                >
+                  <Eye className="w-4 h-4" />
+                  All
+                </button>
+                <button
+                  onClick={() => setVisibilityFilter("public")}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    visibilityFilter === "public" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  title="Public only"
+                >
+                  <Globe className="w-4 h-4" />
+                  Public
+                </button>
+                <button
+                  onClick={() => setVisibilityFilter("private")}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    visibilityFilter === "private" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  title="Private only"
+                >
+                  <Lock className="w-4 h-4" />
+                  Private
+                </button>
+              </div>
+            )}
+            {activeTab === "images" && (
+              <Link href="/dashboard/tools-old/image">
+                <Button variant="default" size="sm" className="gap-2">
+                  <ImageIcon className="w-4 h-4" />
+                  Create Image
+                </Button>
+              </Link>
+            )}
+            {activeTab === "videos" && (
+              <Link href="/dashboard/tools-old/video">
+                <Button variant="default" size="sm" className="gap-2">
+                  <Video className="w-4 h-4" />
+                  Create Video
+                </Button>
+              </Link>
+            )}
+          </div>
+        )}
 
         {/* Content Display */}
         {galleryError && (
@@ -589,16 +648,31 @@ const DashboardHome = () => {
             ) : getCurrentItems().length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
                 <div className="w-16 h-16 rounded-full bg-secondary/50 flex items-center justify-center">
-                  <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                  {activeTab === "images" ? (
+                    <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                  ) : activeTab === "videos" ? (
+                    <Video className="w-8 h-8 text-muted-foreground" />
+                  ) : (
+                    <Music className="w-8 h-8 text-muted-foreground" />
+                  )}
                 </div>
                 <p className="text-muted-foreground text-sm">
                   {authAPI.isAuthenticated()
-                    ? "No creations yet. Start generating to see them here."
+                    ? activeTab === "images"
+                      ? "No images yet. Create your first image."
+                      : activeTab === "videos"
+                        ? "No videos yet. Create your first video."
+                        : "No audio yet. Start generating to see them here."
                     : "Sign in to view your gallery."}
                 </p>
                 {authAPI.isAuthenticated() && (
-                  <Link href="/dashboard/tools">
-                    <Button variant="default" size="sm">Create something</Button>
+                  <Link href={activeTab === "images" ? "/dashboard/tools-old/image" : activeTab === "videos" ? "/dashboard/tools-old/video" : "/dashboard/tools"}>
+                    <Button variant="default" size="sm" className="gap-2">
+                      {activeTab === "images" && <ImageIcon className="w-4 h-4" />}
+                      {activeTab === "videos" && <Video className="w-4 h-4" />}
+                      {activeTab === "audio" && <Music className="w-4 h-4" />}
+                      {activeTab === "images" ? "Create Image" : activeTab === "videos" ? "Create Video" : "Create something"}
+                    </Button>
                   </Link>
                 )}
               </div>

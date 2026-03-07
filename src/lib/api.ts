@@ -511,6 +511,10 @@ export const authAPI = {
         if (data.user) {
           localStorage.setItem('user', JSON.stringify(data.user));
         }
+        // Notify AuthContext and other listeners that tokens have been refreshed
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('auth-storage-change'));
+        }
       }
       return data;
     } catch (error: any) {
@@ -878,22 +882,40 @@ const fetchApimodule = async (
     if (token) (headers as Record<string, string>).Authorization = `Bearer ${token}`;
   }
 
-  const doFetch = (reqHeaders: HeadersInit) =>
-    fetch(`${API_APIMODULE}${endpoint}`, {
+  // Resolve backend base URL (direct call avoids Next.js rewrite proxy timeout / ECONNRESET)
+  const apiBase =
+    (typeof window !== "undefined" && (process.env.NEXT_PUBLIC_API_URL || process.env.VITE_API_URL)) ||
+    "https://api.akobot.ai";
+  const directUrl = `${apiBase.replace(/\/$/, "")}/apimodule${endpoint}`;
+  const proxyUrl = `/api/proxy/apimodule${endpoint}`;
+
+  const doFetch = (reqHeaders: HeadersInit, url: string, credentials: RequestCredentials = "omit") =>
+    fetch(url, {
       ...init,
       headers: reqHeaders,
       mode: "cors",
-      credentials: "omit",
+      credentials,
     });
 
-  let response = await doFetch(headers);
+  let response: Response;
+  try {
+    response = await doFetch(headers, directUrl);
+  } catch {
+    // CORS / network error on direct fetch — fall back to same-origin proxy
+    response = await doFetch(headers, proxyUrl, "include");
+  }
+
   if (response.status === 401 && preferAuth) {
     try {
       await authAPI.refresh();
       const newToken = getAuthToken();
       if (newToken) {
         const retryHeaders: HeadersInit = { ...(init.headers || {}), Authorization: `Bearer ${newToken}` };
-        response = await doFetch(retryHeaders);
+        try {
+          response = await doFetch(retryHeaders, directUrl);
+        } catch {
+          response = await doFetch(retryHeaders, proxyUrl, "include");
+        }
       }
     } catch {
       // Refresh failed, return original 401
@@ -902,7 +924,11 @@ const fetchApimodule = async (
     const token = getAuthToken();
     if (token) {
       const retryHeaders: HeadersInit = { ...headers, Authorization: `Bearer ${token}` };
-      response = await doFetch(retryHeaders);
+      try {
+        response = await doFetch(retryHeaders, directUrl);
+      } catch {
+        response = await doFetch(retryHeaders, proxyUrl, "include");
+      }
     }
   }
 
@@ -1134,7 +1160,8 @@ export const moduleAPI = {
   /**
    * Image to Image transformation
    * POST /apimodule/v1/image-to-image (multipart/form-data)
-   * Uses /api/proxy to forward multipart as-is (avoids "prompt must be string" parsing issues).
+   * Always sends init_image as a base64 data URL for maximum compatibility.
+   * Also sends the file field when available (preferred by some backends).
    * Handles 401 "token does not belong to this device" with refresh + retry.
    */
   imageToImage: async (data: {
@@ -1145,6 +1172,25 @@ export const moduleAPI = {
     file?: File;
   }) => {
     try {
+      // Helper: convert File to base64 data URL
+      const fileToBase64 = (file: File): Promise<string> =>
+        new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+
+      // Always resolve init_image as a full data URL
+      let initImageDataUrl: string | undefined = undefined;
+      if (data.file) {
+        initImageDataUrl = await fileToBase64(data.file);
+      } else if (data.init_image) {
+        initImageDataUrl = data.init_image.startsWith("data:")
+          ? data.init_image
+          : `data:image/png;base64,${data.init_image}`;
+      }
+
       const buildFormData = () => {
         const fd = new FormData();
         // Backend requires prompt as a non-empty string
@@ -1153,13 +1199,11 @@ export const moduleAPI = {
         fd.append("prompt", promptVal);
         if (data.model_id) fd.append("model_id", String(data.model_id));
         if (data.strength !== undefined) fd.append("strength", String(data.strength));
-        // API expects init_image as full data URL (data:image/png;base64,...) per docs
-        if (data.init_image) {
-          const imgVal = data.init_image.startsWith("data:")
-            ? data.init_image
-            : `data:image/png;base64,${data.init_image}`;
-          fd.append("init_image", imgVal);
+        // Always send init_image as data URL (reliable across CORS/proxy)
+        if (initImageDataUrl) {
+          fd.append("init_image", initImageDataUrl);
         }
+        // Also send file field when available (some backends prefer it)
         if (data.file) fd.append("file", data.file);
         return fd;
       };

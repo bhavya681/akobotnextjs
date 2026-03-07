@@ -67,8 +67,8 @@ type ToolMode = "text2image" | "image2image" | "bg-removal" | "upscale";
 const headerModes: { id: ToolMode; label: string; icon: typeof ImageIcon }[] = [
   { id: "text2image", label: "Text to Image", icon: Type },
   { id: "image2image", label: "Image to Image", icon: ArrowLeftRight },
-  { id: "bg-removal", label: "BG Removal", icon: Eraser },
-  { id: "upscale", label: "Upscale", icon: Maximize2 },
+  // { id: "bg-removal", label: "BG Removal", icon: Eraser },
+  // { id: "upscale", label: "Upscale", icon: Maximize2 },
 ];
 
 const FALLBACK_IMAGE_MODELS: { id: string; name: string; description: string; badge: string | null }[] = [
@@ -522,9 +522,9 @@ const ImageToolsPage = () => {
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
             >
-              <motion.img 
-                src="/logo.png" 
-                alt="AKO.ai Logo" 
+              <motion.img
+                src="/logo.png"
+                alt="AKO.ai Logo"
                 className="h-auto w-full max-w-[120px] object-contain"
                 animate={{
                   filter: [
@@ -533,7 +533,7 @@ const ImageToolsPage = () => {
                     "drop-shadow(0 0 8px rgba(255,255,255,0.4))"
                   ]
                 }}
-                transition={{ 
+                transition={{
                   duration: 4,
                   repeat: Infinity,
                   ease: "easeInOut"
@@ -623,51 +623,51 @@ const ImageToolsPage = () => {
                       <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
                     </button>
                   </PopoverTrigger>
-                <PopoverContent
-                  align="start"
-                  side="right"
-                  sideOffset={8}
-                  className="w-[320px] sm:w-[360px] p-0 rounded-xl border border-border bg-card shadow-xl overflow-hidden"
-                >
-                  <div className="p-3 border-b border-border bg-secondary">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Choose model</span>
-                  </div>
-                  <div className="max-h-[320px] overflow-y-auto p-2 space-y-1.5">
-                    {imageModels.map((model) => {
-                      const isSelected = selectedModel === model.id;
-                      return (
-                        <button
-                          key={model.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedModel(model.id);
-                            setModelPickerOpen(false);
-                          }}
-                          className={cn(
-                            "w-full rounded-xl p-3 text-left transition-all border",
-                            isSelected
-                              ? "bg-primary/10 border-primary/50 shadow-sm"
-                              : "bg-secondary border-transparent hover:bg-accent hover:border-border"
-                          )}
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-semibold text-sm text-foreground">{model.name}</span>
-                                {model.badge && (
-                                  <Badge className="text-[9px] h-4 bg-primary/10 text-primary border-0">{model.badge}</Badge>
-                                )}
+                  <PopoverContent
+                    align="start"
+                    side="right"
+                    sideOffset={8}
+                    className="w-[320px] sm:w-[360px] p-0 rounded-xl border border-border bg-card shadow-xl overflow-hidden"
+                  >
+                    <div className="p-3 border-b border-border bg-secondary">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Choose model</span>
+                    </div>
+                    <div className="max-h-[320px] overflow-y-auto p-2 space-y-1.5">
+                      {imageModels.map((model) => {
+                        const isSelected = selectedModel === model.id;
+                        return (
+                          <button
+                            key={model.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedModel(model.id);
+                              setModelPickerOpen(false);
+                            }}
+                            className={cn(
+                              "w-full rounded-xl p-3 text-left transition-all border",
+                              isSelected
+                                ? "bg-primary/10 border-primary/50 shadow-sm"
+                                : "bg-secondary border-transparent hover:bg-accent hover:border-border"
+                            )}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-semibold text-sm text-foreground">{model.name}</span>
+                                  {model.badge && (
+                                    <Badge className="text-[9px] h-4 bg-primary/10 text-primary border-0">{model.badge}</Badge>
+                                  )}
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{model.description}</p>
                               </div>
-                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{model.description}</p>
+                              {isSelected && <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />}
                             </div>
-                            {isSelected && <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </PopoverContent>
-              </Popover>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
 

@@ -184,7 +184,7 @@ const AgentLLMPage = () => {
       const data = await providerAPI.getModels();
       // Handle different response formats
       let models: ModelInfo[] = [];
-      
+
       if (Array.isArray(data)) {
         // Check if array contains objects or strings
         if (data.length > 0 && typeof data[0] === 'object') {
@@ -225,7 +225,7 @@ const AgentLLMPage = () => {
           }
         }
       }
-      
+
       setAvailableModels(models);
       // Set default model if available
       if (models.length > 0 && !selectedModel) {
@@ -263,7 +263,7 @@ const AgentLLMPage = () => {
 
     try {
       const startTime = Date.now();
-      
+
       // Convert conversation history to a prompt string
       // Include previous messages for context
       let prompt = currentInput;
@@ -455,7 +455,7 @@ const AgentLLMPage = () => {
             if (chunks.length > 0) {
               const base64 = chunks.join("");
               const audio = new Audio("data:audio/mp3;base64," + base64);
-              audio.play().catch(() => {});
+              audio.play().catch(() => { });
             }
             ttsChunksRef.current = [];
           }
@@ -463,7 +463,7 @@ const AgentLLMPage = () => {
             toast.error(data.message || "Voice error");
             stopVoice();
           }
-        } catch (_) {}
+        } catch (_) { }
       };
 
       socket.onerror = () => {
@@ -550,13 +550,13 @@ const AgentLLMPage = () => {
         <div className="absolute top-[-20%] left-[-10%] w-[60vw] h-[60vw] rounded-full bg-purple-200/30 dark:bg-purple-900/10 blur-[120px] transition-colors duration-300" />
         <div className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-blue-200/30 dark:bg-blue-900/10 blur-[120px] transition-colors duration-300" />
       </div>
-      <div 
+      <div
         className="absolute inset-0 opacity-[0.02] dark:opacity-[0.03] pointer-events-none transition-opacity duration-300"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
         }}
       />
-      
+
       {/* Main Content */}
       <div className="relative z-20 flex flex-col h-full" style={{ minHeight: '100vh' }}>
         {/* Header - Shows only when there are messages */}
@@ -575,9 +575,9 @@ const AgentLLMPage = () => {
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <motion.img 
-                      src="/logo.png" 
-                      alt="AKO.ai Logo" 
+                    <motion.img
+                      src="/logo.png"
+                      alt="AKO.ai Logo"
                       className="h-auto w-full max-w-[120px] object-contain"
                       animate={{
                         filter: [
@@ -586,7 +586,7 @@ const AgentLLMPage = () => {
                           "drop-shadow(0 0 8px rgba(255,255,255,0.4))"
                         ]
                       }}
-                      transition={{ 
+                      transition={{
                         duration: 4,
                         repeat: Infinity,
                         ease: "easeInOut"
@@ -608,10 +608,10 @@ const AgentLLMPage = () => {
                       value={selectedModel}
                       onChange={(e) => setSelectedModel(e.target.value)}
                       disabled={loadingModels}
-                      className="appearance-none bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 text-xs font-medium px-4 py-2 pr-8 rounded-lg border border-gray-200 dark:border-white/5 focus:outline-none cursor-pointer hover:bg-gray-200 dark:hover:bg-white/10 transition-colors duration-300"
+                      className="appearance-none bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 text-xs font-medium px-4 py-2 pr-8 rounded-lg focus:outline-none cursor-pointer hover:bg-gray-200 dark:hover:bg-white/10 transition-colors duration-300"
                     >
                       {availableModels.map((modelInfo, index) => (
-                        <option key={`${modelInfo.model}-${index}`} value={modelInfo.model}>
+                        <option key={`${modelInfo.model}-${index}`} className="text-black dark:text-white bg-white dark:bg-black" value={modelInfo.model}>
                           {modelInfo.name}
                         </option>
                       ))}
@@ -721,11 +721,10 @@ const AgentLLMPage = () => {
                           </button>
                         )}
                       </div>
-                      <div className={`rounded-2xl px-5 py-3.5 shadow-sm transition-colors duration-300 ${
-                        message.role === "user" 
-                          ? "bg-gray-900 dark:bg-[#252630] text-white border border-gray-700 dark:border-white/5" 
-                          : "bg-transparent text-gray-800 dark:text-gray-200"
-                      }`}>
+                      <div className={`rounded-2xl px-5 py-3.5 shadow-sm transition-colors duration-300 ${message.role === "user"
+                        ? "bg-gray-900 dark:bg-[#252630] text-white border border-gray-700 dark:border-white/5"
+                        : "bg-transparent text-gray-800 dark:text-gray-200"
+                        }`}>
                         <pre className="whitespace-pre-wrap font-sans text-[15px] leading-relaxed">{message.content}</pre>
                       </div>
                     </div>
@@ -733,14 +732,14 @@ const AgentLLMPage = () => {
                 ))}
                 {isLoading && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-4">
-                        <div className="w-9 h-9 rounded-lg overflow-hidden bg-white dark:bg-white/95 shadow-md ring-2 ring-black/10 dark:ring-white/20 flex items-center justify-center transition-colors duration-300 p-1">
-                          <img src="/logo.png" alt="AI" className="w-full h-full object-contain object-center" />
-                     </div>
-                     <div className="flex items-center gap-1.5 px-1 h-9">
-                        <div className="w-1.5 h-1.5 bg-purple-600 dark:bg-purple-500 rounded-full animate-bounce transition-colors duration-300" />
-                        <div className="w-1.5 h-1.5 bg-purple-600 dark:bg-purple-500 rounded-full animate-bounce delay-75 transition-colors duration-300" />
-                        <div className="w-1.5 h-1.5 bg-purple-600 dark:bg-purple-500 rounded-full animate-bounce delay-150 transition-colors duration-300" />
-                     </div>
+                    <div className="w-9 h-9 rounded-lg overflow-hidden bg-white dark:bg-white/95 shadow-md ring-2 ring-black/10 dark:ring-white/20 flex items-center justify-center transition-colors duration-300 p-1">
+                      <img src="/logo.png" alt="AI" className="w-full h-full object-contain object-center" />
+                    </div>
+                    <div className="flex items-center gap-1.5 px-1 h-9">
+                      <div className="w-1.5 h-1.5 bg-purple-600 dark:bg-purple-500 rounded-full animate-bounce transition-colors duration-300" />
+                      <div className="w-1.5 h-1.5 bg-purple-600 dark:bg-purple-500 rounded-full animate-bounce delay-75 transition-colors duration-300" />
+                      <div className="w-1.5 h-1.5 bg-purple-600 dark:bg-purple-500 rounded-full animate-bounce delay-150 transition-colors duration-300" />
+                    </div>
                   </motion.div>
                 )}
                 <div ref={messagesEndRef} />
@@ -761,26 +760,25 @@ const AgentLLMPage = () => {
             animate={{ paddingTop: hasMessages ? '1rem' : '2rem', paddingBottom: hasMessages ? '1rem' : '2rem' }}
           >
             <motion.div className={`w-full mx-auto px-4 ${hasMessages ? 'max-w-5xl' : 'max-w-4xl'}`}>
-              
+
               {/* Content Type Selectors - Centered above input */}
               {!hasMessages && (
-              <div className="flex items-center justify-center gap-3 mb-6">
-                {contentTypes.map((type) => (
-                  <button
-                    key={type.id}
-                    onClick={() => setSelectedContentType(type.id)}
-                    className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                      selectedContentType === type.id
+                <div className="flex items-center justify-center gap-3 mb-6">
+                  {contentTypes.map((type) => (
+                    <button
+                      key={type.id}
+                      onClick={() => setSelectedContentType(type.id)}
+                      className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap ${selectedContentType === type.id
                         ? "bg-purple-600 dark:bg-[#8B5CF6] text-white shadow-lg shadow-purple-900/20 dark:shadow-purple-900/30"
                         : "bg-gray-100 dark:bg-[#1a1b26] text-gray-700 dark:text-gray-400 border border-gray-200 dark:border-white/5 hover:bg-gray-200 dark:hover:bg-[#242630] hover:text-gray-900 dark:hover:text-gray-300"
-                    }`}
-                  >
-                    <type.icon className={`w-4 h-4 ${selectedContentType === type.id ? "text-white" : ""}`} />
-                    {type.label}
-                    {type.isPremium && <Crown className="w-3 h-3 text-amber-400 ml-0.5" />}
-                  </button>
-                ))}
-              </div>
+                        }`}
+                    >
+                      <type.icon className={`w-4 h-4 ${selectedContentType === type.id ? "text-white" : ""}`} />
+                      {type.label}
+                      {type.isPremium && <Crown className="w-3 h-3 text-amber-400 ml-0.5" />}
+                    </button>
+                  ))}
+                </div>
               )}
               {/* Input Wrapper */}
               <motion.div className="relative">
@@ -798,7 +796,7 @@ const AgentLLMPage = () => {
                       rows={1}
                       className="w-full bg-transparent text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none resize-none overflow-hidden text-[16px] leading-relaxed pt-5 pl-6 pr-32 pb-4 min-h-[60px] max-h-[200px] transition-colors duration-300"
                     />
-                    
+
                     {/* Top Right: Mood Selector + Send Button */}
                     <div className="flex items-start gap-2 pt-3 pr-3">
                       {/* <div className="relative group">
@@ -817,11 +815,10 @@ const AgentLLMPage = () => {
                       <button
                         onClick={handleSend}
                         disabled={!input.trim() || isLoading}
-                        className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all duration-200 ${
-                          input.trim() && !isLoading 
-                            ? 'bg-purple-600 dark:bg-[#3b3e4a] text-white hover:bg-purple-700 dark:hover:bg-[#4a4d5a]' 
-                            : 'bg-gray-200 dark:bg-[#242630] text-gray-400 dark:text-gray-600 cursor-not-allowed'
-                        }`}
+                        className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all duration-200 ${input.trim() && !isLoading
+                          ? 'bg-purple-600 dark:bg-[#3b3e4a] text-white hover:bg-purple-700 dark:hover:bg-[#4a4d5a]'
+                          : 'bg-gray-200 dark:bg-[#242630] text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                          }`}
                       >
                         <ArrowRight className="w-4 h-4" />
                       </button>
@@ -832,12 +829,12 @@ const AgentLLMPage = () => {
                   <div className="flex items-center justify-between px-4 pb-3 pt-2">
                     {/* Left Group */}
                     <div className="flex items-center gap-3">
-                       {/* Upload */}
+                      {/* Upload */}
                       <button className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors duration-300" title="Upload">
                         <Upload className="w-5 h-5" />
                       </button>
-                      
-                      
+
+
                       {/* Purple Plus Button */}
                       <button className="w-8 h-8 rounded-full bg-purple-600 dark:bg-[#8B5CF6] hover:bg-purple-700 dark:hover:bg-[#7C3AED] flex items-center justify-center text-white transition-colors duration-300 shadow-lg shadow-purple-900/30 dark:shadow-purple-900/50">
                         <Plus className="w-5 h-5" />
@@ -854,7 +851,7 @@ const AgentLLMPage = () => {
                         </button>
                       </div>
 
-                       {/* Agents Dropdown */}
+                      {/* Agents Dropdown */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-[#242630] border border-gray-200 dark:border-white/5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-[#2a2c38] transition-all duration-300">
@@ -902,7 +899,7 @@ const AgentLLMPage = () => {
                         </div>
                       )}
                     </div>
-                    
+
                     {/* Right Group */}
                     {/* Right Group */}
                     <div className="flex items-center gap-1 sm:gap-2 px-1">
@@ -910,11 +907,10 @@ const AgentLLMPage = () => {
                       <button
                         type="button"
                         onClick={handleMicClick}
-                        className={`p-2 rounded-lg transition-all duration-200 active:scale-95 ${
-                          isVoiceActive
-                            ? "bg-red-500/20 text-red-500 dark:text-red-400 hover:bg-red-500/30"
-                            : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400"
-                        }`}
+                        className={`p-2 rounded-lg transition-all duration-200 active:scale-95 ${isVoiceActive
+                          ? "bg-red-500/20 text-red-500 dark:text-red-400 hover:bg-red-500/30"
+                          : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400"
+                          }`}
                         aria-label="Voice Input"
                         title={isVoiceActive ? "Stop voice" : "Start voice"}
                       >

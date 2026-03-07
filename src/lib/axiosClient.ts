@@ -1,7 +1,7 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
 
 const REFRESH_ENDPOINT = "/api/auth/refresh";
-const REFRESH_COOLDOWN_MS = 60 * 1000; // 1 minute - allow retry if refresh failed transiently
+const REFRESH_COOLDOWN_MS = 10 * 1000; // 10 seconds - allow faster retry after transient failures
 const POST_LOGIN_GRACE_MS = 90 * 1000; // Don't attempt refresh (and thus logout) within 90s of login
 
 let lastRefreshTime = 0;
@@ -133,6 +133,8 @@ async function doRefresh(): Promise<string | null> {
         if (data.user) {
           localStorage.setItem("user", JSON.stringify(data.user));
         }
+        // Notify AuthContext and other listeners that tokens have been refreshed
+        window.dispatchEvent(new Event("auth-storage-change"));
         return nextAccessToken;
       }
       return null;

@@ -4,8 +4,8 @@ import { createContext, useContext, useState, useEffect, useRef, ReactNode } fro
 import { authAPI } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 
-/** Proactive token refresh interval: 5 minutes */
-const TOKEN_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+/** Proactive token refresh interval: 13 minutes (refresh ~2 min before 15-min session expiry) */
+const TOKEN_REFRESH_INTERVAL_MS = 13 * 60 * 1000;
 /** Grace period after login - don't run refresh (avoids 401 right after login) */
 const POST_LOGIN_GRACE_MS = 90 * 1000;
 
@@ -104,7 +104,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       try {
-        await authAPI.refresh();
+        const data = await authAPI.refresh();
+        // Update React state with the new tokens/user so the UI stays in sync
+        if (data?.accessToken) {
+          const updatedUser = authAPI.getCurrentUser();
+          if (updatedUser) {
+            setUser(updatedUser);
+          }
+        }
       } catch (err) {
         console.warn('Token refresh skipped/failed; will retry on next cycle:', err);
       }

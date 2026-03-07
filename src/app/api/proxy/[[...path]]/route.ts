@@ -29,11 +29,17 @@ async function proxy(method: string, req: NextRequest, path: string[]) {
       headers["content-length"] = String(b.byteLength);
     }
   }
+
+  // Longer timeout for image/video generation (these can take 60-120s)
+  const isSlowEndpoint = /image-gen|image-to-image|text-to-video|background-removal|fetch-image-result/i.test(pathStr);
+  const timeoutMs = isSlowEndpoint ? 120_000 : 60_000;
+
   const res = await fetch(url, {
     method,
     headers: Object.keys(headers).length ? headers : undefined,
     body,
     cache: "no-store",
+    signal: AbortSignal.timeout(timeoutMs),
   });
   const out = new Headers();
   res.headers.forEach((v, k) => {

@@ -412,12 +412,14 @@ const AuthSignIn = () => {
               )}
 
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Email</label>
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">
+                  {isSignUp ? "Email" : "Email or Username"}
+                </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
-                    type="email"
-                    placeholder="Enter email"
+                    type="text"
+                    placeholder={isSignUp ? "Enter email" : "Enter email or username"}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10 h-12 bg-white/5 border-white/10 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all rounded-xl"

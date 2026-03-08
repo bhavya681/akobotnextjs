@@ -28,7 +28,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import ImageDetailModal from "@/components/feed/ImageDetailModal";
 import { FeedItem } from "@/components/feed/FeedCard";
-import { galleryAPI, authAPI, modelRegistryAPI } from "@/lib/api";
+import { galleryAPI, authAPI, modelRegistryAPI, customAgentAPI } from "@/lib/api";
 import { galleryItemToFeedItem, galleryItemToAgentItem, type AgentItemFromGallery } from "@/lib/galleryUtils";
 
 const quickActions = [
@@ -83,6 +83,8 @@ const DashboardHome = () => {
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const [galleryAgents, setGalleryAgents] = useState<AgentItemFromGallery[]>([]);
+  const [customAgents, setCustomAgents] = useState<AgentItem[]>([]);
+  const [isLoadingAgents, setIsLoadingAgents] = useState(false);
   const [modelFilter, setModelFilter] = useState<string>("");
   const [availableModels, setAvailableModels] = useState<{ modelId: string; displayName: string }[]>([]);
   const nextPageRef = useRef(1);
@@ -180,6 +182,30 @@ const DashboardHome = () => {
     fetchGallery();
   }, [fetchGallery]);
 
+  useEffect(() => {
+    if (activeTab !== "agents") return;
+    setIsLoadingAgents(true);
+    customAgentAPI
+      .list()
+      .then((list) => {
+        const agents = (Array.isArray(list) ? list : []).map((a) => ({
+          id: a._id,
+          name: a.name,
+          description: a.systemPrompt || a.brandDetails || "Custom AI agent",
+          avatar: "",
+          model: "RAG",
+          createdAt: a.createdAt || new Date().toISOString(),
+          interactions: 0,
+          status: "active" as const,
+        }));
+        setCustomAgents(agents);
+      })
+      .catch(() => {
+        setCustomAgents([]);
+      })
+      .finally(() => setIsLoadingAgents(false));
+  }, [activeTab]);
+
   const handleToggleVisibility = async (item: FeedItem) => {
     if (!item.galleryId || togglingId) return;
     setTogglingId(item.galleryId);
@@ -226,7 +252,7 @@ const DashboardHome = () => {
   const displayImages = galleryImages;
   const displayVideos = galleryVideos;
   const displayAudios = galleryAudios;
-  const displayAgents: AgentItem[] = galleryAgents.map((a) => ({ ...a, id: a.id, interactions: a.interactions }));
+  const displayAgents: AgentItem[] = activeTab === "agents" ? customAgents : galleryAgents.map((a) => ({ ...a, id: a.id, interactions: a.interactions }));
 
   // Use galleryStats for tab counts when available (real totals), else fall back to displayed items
   const imagesCount = authAPI.isAuthenticated() && galleryStats?.byContentType
@@ -238,9 +264,9 @@ const DashboardHome = () => {
   const audioCount = authAPI.isAuthenticated() && galleryStats?.byContentType
     ? (galleryStats.byContentType.audio ?? 0)
     : displayAudios.length;
-  const agentsCount = authAPI.isAuthenticated() && galleryStats?.byContentType
+  const agentsCount = activeTab === "agents" ? customAgents.length : (authAPI.isAuthenticated() && galleryStats?.byContentType
     ? (galleryStats.byContentType.llm ?? displayAgents.length)
-    : displayAgents.length;
+    : displayAgents.length);
 
   const handleLike = (id: number | string) => {
     toast.success("Liked!");
@@ -556,14 +582,16 @@ const DashboardHome = () => {
                 </Button>
               </Link>
             )}
-            {activeTab === "videos" && (
-              <Link href="/dashboard/tools-old/video">
-                <Button variant="default" size="sm" className="gap-2">
-                  <Video className="w-4 h-4" />
-                  Create Video
-                </Button>
-              </Link>
-            )}
+          </div>
+        )}
+        {activeTab === "agents" && (
+          <div className="flex flex-wrap items-center gap-4">
+            <Link href="/dashboard/agent-store">
+              <Button variant="default" size="sm" className="gap-2">
+                <Bot className="w-4 h-4" />
+                Create Agent
+              </Button>
+            </Link>
           </div>
         )}
 
@@ -579,7 +607,7 @@ const DashboardHome = () => {
           </div>
         )}
         {activeTab === "agents" ? (
-          isLoadingGallery ? (
+          isLoadingAgents ? (
             <div className="flex flex-col items-center justify-center py-16 gap-4">
               <Loader2 className="w-10 h-10 animate-spin text-primary" />
               <p className="text-muted-foreground text-sm">
@@ -592,19 +620,23 @@ const DashboardHome = () => {
                 <Bot className="w-8 h-8 text-muted-foreground" />
               </div>
               <p className="text-muted-foreground text-sm">
-                {authAPI.isAuthenticated()
-                  ? "No agents yet. Create one to see it here."
-                  : "Sign in to view your agents."}
+                No agents yet. Create one to get started.
               </p>
+              <Link href="/dashboard/agent-store">
+                <Button variant="default" size="sm" className="gap-2">
+                  <Bot className="w-4 h-4" />
+                  Create Agent
+                </Button>
+              </Link>
             </div>
           ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {displayAgents.map((agent) => (
+              <Link key={agent.id} href={`/dashboard/agent-store/${agent.id}/chat`}>
               <motion.div
-                key={agent.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="glass-card rounded-xl p-4 hover:shadow-lg transition-shadow"
+                className="glass-card rounded-xl p-4 hover:shadow-lg transition-shadow cursor-pointer"
               >
                 <div className="flex items-start gap-3">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-xl font-bold text-white flex-shrink-0">
@@ -628,11 +660,12 @@ const DashboardHome = () => {
                     </p>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground">
                       <span>{agent.model}</span>
-                      <span>{agent.interactions} interactions</span>
+                      <span>Chat →</span>
                     </div>
                   </div>
                 </div>
               </motion.div>
+              </Link>
             ))}
           </div>
           )

@@ -821,27 +821,519 @@ export const audioAPI = {
   },
 };
 
-// Crawl API
-export const crawlAPI = {
-  crawlWebsite: async (url: string) => {
+// Custom Agent API - uses /api/custom-agent proxy (rewrites to VITE_API_URL/custom-agent)
+const CUSTOM_AGENT_BASE = "/api/custom-agent";
+
+const customAgentRequest = async (path: string, options: RequestInit = {}): Promise<Response> => {
+  const url = path.startsWith("/") ? `${CUSTOM_AGENT_BASE}${path}` : `${CUSTOM_AGENT_BASE}/${path}`;
+  const base = typeof window !== "undefined" ? window.location.origin : "";
+  const doFetch = (token: string | null) => {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      ...(options.headers as Record<string, string>),
+    };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    return fetch(`${base}${url}`, {
+      ...options,
+      headers,
+      credentials: "include",
+    });
+  };
+
+  let token = typeof window !== "undefined" ? getAuthToken() : null;
+  let res = await doFetch(token);
+
+  if (res.status === 401) {
+    const errData = await res.json().catch(() => ({})) as { message?: string };
+    const errMsg = errData.message ?? "";
+    const isSessionError = /token does not belong|session.*not belong|Session invalid/i.test(errMsg);
     try {
-      const response = await apiRequest('/api/crawl/website', {
-        method: 'POST',
-        body: JSON.stringify({ url }),
+      await authAPI.refresh();
+      token = getAuthToken();
+      if (token) res = await doFetch(token);
+    } catch {
+      if (isSessionError && typeof window !== "undefined") {
+        clearAuthTokens();
+        window.dispatchEvent(new Event("auth-storage-change"));
+      }
+      throw new Error(errMsg || "Session expired. Please sign in again to continue.");
+    }
+    if (res.status === 401 && isSessionError && typeof window !== "undefined") {
+      clearAuthTokens();
+      window.dispatchEvent(new Event("auth-storage-change"));
+      throw new Error("Session expired. Please sign in again to continue.");
+    }
+  }
+
+  return res;
+};
+
+export interface CustomAgent {
+  _id: string;
+  name: string;
+  systemPrompt?: string;
+  brandDetails?: string;
+  welcomeMessage?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export const customAgentAPI = {
+  /** POST /custom-agent - Create a new custom agent */
+  create: async (body: {
+    name: string;
+    systemPrompt?: string;
+    brandDetails?: string;
+    welcomeMessage?: string;
+  }): Promise<CustomAgent> => {
+    const response = await customAgentRequest("", {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({})) as { message?: string; error?: string };
+      const msg = err.message || err.error || `Failed to create agent (${response.status})`;
+      throw new Error(msg);
+    }
+    return response.json();
+  },
+
+  /** GET /custom-agent - List all agents owned by the current user */
+  list: async (): Promise<CustomAgent[]> => {
+    const response = await customAgentRequest("", { method: "GET" });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error((err as { message?: string }).message || "Failed to fetch agents");
+    }
+    const data = await response.json();
+    return Array.isArray(data) ? data : data?.agents ?? data?.data ?? [];
+  },
+
+  /** GET /custom-agent/{agentId} - Get a specific agent */
+  get: async (agentId: string): Promise<CustomAgent> => {
+    const response = await customAgentRequest(`/${agentId}`, { method: "GET" });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error((err as { message?: string }).message || "Failed to fetch agent");
+    }
+    return response.json();
+  },
+
+  /** PATCH /custom-agent/{agentId} - Update agent */
+  update: async (
+    agentId: string,
+    body: { name?: string; systemPrompt?: string; brandDetails?: string; welcomeMessage?: string }
+  ): Promise<CustomAgent> => {
+    const response = await customAgentRequest(`/${agentId}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error((err as { message?: string }).message || "Failed to update agent");
+    }
+    return response.json();
+  },
+
+  /** DELETE /custom-agent/{agentId} - Delete an agent */
+  delete: async (agentId: string): Promise<void> => {
+    const response = await customAgentRequest(`/${agentId}`, { method: "DELETE" });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error((err as { message?: string }).message || "Failed to delete agent");
+    }
+  },
+
+  /** POST /custom-agent/{agentId}/ingest/crawler - Crawl website and ingest into RAG */
+  ingestCrawler: async (
+    agentId: string,
+    body: { url: string; max_depth?: number; mode?: "append" | "overwrite" }
+  ): Promise<{ jobId?: string; [k: string]: unknown }> => {
+    const response = await customAgentRequest(`/${agentId}/ingest/crawler`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error((err as { message?: string }).message || "Crawl ingest failed");
+    }
+    return response.json();
+  },
+
+  /** POST /custom-agent/{agentId}/ingest/files - Upload documents for RAG ingestion */
+  ingestFiles: async (
+    agentId: string,
+    params: { files: File[]; mode?: "append" | "overwrite" }
+  ): Promise<{ jobId?: string; [k: string]: unknown }> => {
+    const formData = new FormData();
+    params.files.forEach((f) => formData.append("files", f));
+    if (params.mode) formData.append("mode", params.mode);
+
+    const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    const base = typeof window !== "undefined" ? window.location.origin : "";
+    const res = await fetch(`${base}/api/custom-agent/${agentId}/ingest/files`, {
+      method: "POST",
+      headers,
+      body: formData,
+      credentials: "include",
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error((err as { message?: string }).message || "File ingestion failed");
+    }
+    return res.json();
+  },
+
+  /** POST /custom-agent/{agentId}/chat - Chat with agent (multipart/form-data) */
+  chat: async (
+    agentId: string,
+    params: {
+      query: string;
+      session_id?: string;
+      stream?: boolean;
+      model_provider?: string;
+      image_mode?: string;
+      reranker_model_name?: string;
+      files?: File[];
+      images?: File[];
+    }
+  ): Promise<{ response?: string; answer?: string; [k: string]: unknown }> => {
+    const formData = new FormData();
+    formData.append("query", params.query);
+    if (params.session_id) formData.append("session_id", params.session_id);
+    if (params.stream !== undefined) formData.append("stream", String(params.stream));
+    if (params.model_provider) formData.append("model_provider", params.model_provider);
+    if (params.image_mode) formData.append("image_mode", params.image_mode);
+    if (params.reranker_model_name) formData.append("reranker_model_name", params.reranker_model_name);
+    (params.files || []).forEach((f) => formData.append("files", f));
+    (params.images || []).forEach((f) => formData.append("images", f));
+
+    const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    const base = typeof window !== "undefined" ? window.location.origin : "";
+    const res = await fetch(`${base}/api/custom-agent/${agentId}/chat`, {
+      method: "POST",
+      headers,
+      body: formData,
+      credentials: "include",
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error((err as { message?: string }).message || `Chat failed: ${res.status}`);
+    }
+    return res.json();
+  },
+
+  /** POST /custom-agent/{agentId}/chat - Chat with agent (streaming SSE) */
+  chatStream: async (
+    agentId: string,
+    params: {
+      query: string;
+      session_id?: string;
+      model_provider?: string;
+      image_mode?: string;
+      reranker_model_name?: string;
+      files?: File[];
+      images?: File[];
+      onChunk?: (text: string) => void;
+      onDone?: () => void;
+      onError?: (err: Error) => void;
+    }
+  ): Promise<void> => {
+    const buildFormData = (includeSessionId = true) => {
+      const fd = new FormData();
+      fd.append("query", params.query);
+      if (includeSessionId && params.session_id) fd.append("session_id", params.session_id);
+      fd.append("stream", "true");
+      if (params.model_provider) fd.append("model_provider", params.model_provider);
+      if (params.image_mode) fd.append("image_mode", params.image_mode);
+      if (params.reranker_model_name) fd.append("reranker_model_name", params.reranker_model_name);
+      (params.files || []).forEach((f) => fd.append("files", f));
+      (params.images || []).forEach((f) => fd.append("images", f));
+      return fd;
+    };
+
+    const base = typeof window !== "undefined" ? window.location.origin : "";
+    const doFetch = (token: string | null, includeSessionId = true) => {
+      const headers: Record<string, string> = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+      return fetch(`${base}/api/custom-agent/${agentId}/chat`, {
+        method: "POST",
+        headers,
+        body: buildFormData(includeSessionId),
+        credentials: "include",
       });
-      
+    };
+
+    let token = typeof window !== "undefined" ? getAuthToken() : null;
+    let res: Response;
+    try {
+      res = await doFetch(token, true);
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error(String(e));
+      params.onError?.(err);
+      throw err;
+    }
+
+    if (res.status === 401) {
+      const errData = await res.json().catch(() => ({})) as { message?: string };
+      const errMsg = errData.message ?? "";
+      const isSessionError = /token does not belong|session.*not belong|Session invalid/i.test(errMsg);
+      try {
+        await authAPI.refresh();
+        token = getAuthToken();
+        if (token) {
+          res = await doFetch(token, true);
+        }
+      } catch {
+        if (isSessionError && typeof window !== "undefined") {
+          clearAuthTokens();
+          window.dispatchEvent(new Event("auth-storage-change"));
+        }
+        const err = new Error(errMsg || "Session expired. Please sign in again to continue.");
+        params.onError?.(err);
+        throw err;
+      }
+      if (res.status === 401 && isSessionError && typeof window !== "undefined") {
+        clearAuthTokens();
+        window.dispatchEvent(new Event("auth-storage-change"));
+        const err = new Error("Session expired. Please sign in again to continue.");
+        params.onError?.(err);
+        throw err;
+      }
+    }
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({})) as { message?: string };
+      const errMsg = errData.message ?? "";
+      const isSessionNotBelong = /session.*not belong|not belong.*session/i.test(errMsg);
+      if (params.session_id && isSessionNotBelong && res.status !== 401) {
+        try {
+          res = await doFetch(token, false);
+        } catch (e) {
+          const err = e instanceof Error ? e : new Error(String(e));
+          params.onError?.(err);
+          throw err;
+        }
+      }
+      if (!res.ok) {
+        const finalErr = await res.json().catch(() => ({})) as { message?: string };
+        const err = new Error(finalErr.message || errMsg || `Chat failed: ${res.status}`);
+        params.onError?.(err);
+        throw err;
+      }
+    }
+
+    const contentType = res.headers.get("content-type") ?? "";
+    if (contentType.includes("application/json")) {
+      try {
+        const data = (await res.json()) as Record<string, unknown>;
+        const text =
+          (data.response as string) ??
+          (data.answer as string) ??
+          (data.text as string) ??
+          (data.content as string) ??
+          "";
+        if (text) params.onChunk?.(text);
+      } catch (e) {
+        params.onError?.(e instanceof Error ? e : new Error(String(e)));
+        throw e;
+      }
+      params.onDone?.();
+      return;
+    }
+
+    const reader = res.body?.getReader();
+    if (!reader) {
+      const err = new Error("No response body");
+      params.onError?.(err);
+      throw err;
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          params.onDone?.();
+          break;
+        }
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const data = line.slice(6).trim();
+            if (data === "[DONE]" || data === "[DONE]\r") continue;
+            try {
+              const parsed = JSON.parse(data) as Record<string, unknown>;
+              const text =
+                (parsed.text as string) ??
+                (parsed.delta as string) ??
+                (parsed.content as string) ??
+                ((parsed.choices as Array<{ delta?: { content?: string }; text?: string }>)?.[0]?.delta?.content) ??
+                ((parsed.choices as Array<{ text?: string }>)?.[0]?.text) ??
+                (parsed.answer as string) ??
+                (parsed.response as string) ??
+                "";
+              if (text) params.onChunk?.(text);
+            } catch {
+              // ignore parse errors for malformed SSE lines
+            }
+          }
+        }
+      }
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error(String(e));
+      params.onError?.(err);
+      throw err;
+    }
+  },
+
+  /** POST /custom-agent/{agentId}/tts - Text-to-speech via external RAG server (ModelsLab TTS) */
+  tts: async (agentId: string, body: { text: string }): Promise<{ url?: string; audio_url?: string }> => {
+    const response = await customAgentRequest(`/${agentId}/tts`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error((err as { message?: string }).message || "TTS failed");
+    }
+    const data = await response.json();
+    const url =
+      data?.url ??
+      data?.audio_url ??
+      (typeof data === "string" ? data : null) ??
+      (data as { data?: { url?: string; audio_url?: string } })?.data?.url ??
+      (data as { data?: { url?: string; audio_url?: string } })?.data?.audio_url;
+    return { url: url ?? undefined, audio_url: url ?? undefined };
+  },
+
+  /** POST /custom-agent/{agentId}/transcribe - Audio transcription via external RAG server */
+  transcribe: async (agentId: string, audioFile: File): Promise<{ text?: string; transcription?: string }> => {
+    const formData = new FormData();
+    formData.append("audio_file", audioFile);
+
+    const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    const base = typeof window !== "undefined" ? window.location.origin : "";
+    const res = await fetch(`${base}/api/custom-agent/${agentId}/transcribe`, {
+      method: "POST",
+      headers,
+      body: formData,
+      credentials: "include",
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error((err as { message?: string }).message || "Transcription failed");
+    }
+    const data = await res.json();
+    const text = data?.text ?? data?.transcription ?? (data as { data?: { text?: string } })?.data?.text;
+    return { text, transcription: text };
+  },
+
+  /** POST /custom-agent/{agentId}/feedback - Submit thumbs up/down feedback (RLHF) */
+  feedback: async (
+    agentId: string,
+    body: {
+      session_id: string;
+      rating: "up" | "down";
+      feedback_text?: string;
+      metadata?: Record<string, unknown>;
+    }
+  ): Promise<{ ok?: boolean }> => {
+    const response = await customAgentRequest(`/${agentId}/feedback`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error((err as { message?: string }).message || "Feedback failed");
+    }
+    return response.json();
+  },
+
+  /** GET /custom-agent/{agentId}/progress/{jobId} - Check ingestion or crawler job progress */
+  getProgress: async (
+    agentId: string,
+    jobId: string
+  ): Promise<{ status?: string; progress?: number; message?: string; [k: string]: unknown }> => {
+    const response = await customAgentRequest(`/${agentId}/progress/${jobId}`, { method: "GET" });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error((err as { message?: string }).message || "Failed to fetch progress");
+    }
+    return response.json();
+  },
+
+  /** GET /custom-agent/{agentId}/metrics - System metrics from external RAG server */
+  metrics: async (agentId: string): Promise<Record<string, unknown>> => {
+    const response = await customAgentRequest(`/${agentId}/metrics`, { method: "GET" });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error((err as { message?: string }).message || "Failed to fetch metrics");
+    }
+    return response.json();
+  },
+
+  /** POST /custom-agent/{agentId}/bootstrap - Bootstrap persona on external RAG server */
+  bootstrap: async (agentId: string, companyLogo?: File): Promise<{ ok?: boolean }> => {
+    const formData = new FormData();
+    if (companyLogo) formData.append("company_logo", companyLogo);
+
+    const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    const base = typeof window !== "undefined" ? window.location.origin : "";
+    const res = await fetch(`${base}/api/custom-agent/${agentId}/bootstrap`, {
+      method: "POST",
+      headers,
+      body: formData,
+      credentials: "include",
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error((err as { message?: string }).message || "Bootstrap failed");
+    }
+    return res.json();
+  },
+};
+
+// Crawl API - uses /api/crawl/website rewrite (optional; backend may not have this endpoint)
+export const crawlAPI = {
+  crawlWebsite: async (url: string): Promise<{ success: boolean; data?: { url?: string; title?: string; description?: string; favicon?: string | null; logo?: string | null }; message?: string }> => {
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+      const base = typeof window !== "undefined" ? window.location.origin : "";
+      const response = await fetch(`${base}/api/crawl/website`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ url }),
+        credentials: "include",
+      });
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Server error: ${response.status}`);
+        const err = await response.json().catch(() => ({}));
+        throw new Error((err as { message?: string }).message || `Server error: ${response.status}`);
       }
-      
       return response.json();
-    } catch (error: any) {
-      // Handle network errors (backend not running, CORS, etc.)
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        throw new Error('Cannot connect to backend. Make sure the backend server is running on port 5000.');
-      }
-      throw error;
+    } catch (error: unknown) {
+      // Crawl is optional - return failure so UI can continue without auto-fill
+      const msg = error instanceof Error ? error.message : "Crawl unavailable";
+      return { success: false, message: msg };
     }
   },
 };

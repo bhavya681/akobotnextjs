@@ -1,9 +1,8 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Lock, User, Apple, Chrome, Send, Bot, MessageCircle, ArrowLeft, Eye, EyeOff, Sparkles } from "lucide-react";
+import { Mail, Lock, User, Bot, ArrowLeft, Eye, EyeOff, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -24,6 +23,25 @@ const AuthSignIn = () => {
   const [forgotSuccess, setForgotSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+  const showcaseImages = [
+    "/feeds/image1.jpg",
+    "/feeds/image3.png",
+    "/feeds/image8.jpg",
+    "/feeds/image14.jpg",
+    "/feeds/image15.jpg",
+    "/feeds/image16.jpg",
+    "/feeds/image17.jpg",
+    "/feeds/image18.jpg",
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % showcaseImages.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [showcaseImages.length]);
   
   // Sequential message animation state for 6 agents grid
   const [visibleMessages, setVisibleMessages] = useState<Record<string, number>>({});
@@ -439,7 +457,7 @@ const AuthSignIn = () => {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl shadow-xl shadow-primary/40 transition-all relative overflow-hidden group"
+                  className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl transition-all relative overflow-hidden group shadow-sm"
                 >
                   <motion.div
                     className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12"
@@ -475,129 +493,210 @@ const AuthSignIn = () => {
 </div>
 
         {/* Footer App Links */}
-        <div className="mt-auto pt-8">
+        <div className="mt-auto pt-6">
           <p className="text-foreground text-[11px] font-bold uppercase tracking-widest mb-4 text-center opacity-60">Mobile App Coming Soon</p>
           <div className="flex gap-3">
-            <Button variant="outline" className="flex-1 h-12 bg-primary/10 border-primary/30 rounded-xl text-primary-foreground">
-              <Apple className="w-4 h-4 mr-2" />
-              <span className="text-xs font-semibold">App Store</span>
-            </Button>
-            <Button variant="outline" className="flex-1 h-12 bg-primary/10 border-primary/30 rounded-xl text-primary-foreground">
-              <Chrome className="w-4 h-4 mr-2" />
-              <span className="text-xs font-semibold">Google Play</span>
-            </Button>
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex-1">
+              <Button 
+                variant="outline" 
+                className="w-full h-12 bg-white hover:bg-gray-100 text-gray-800 font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg border border-gray-200 flex items-center justify-center"
+              >       
+                <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                <span className="text-sm">Google</span>
+              </Button>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex-1">
+              <Button 
+                variant="outline" 
+                className="w-full h-12 bg-black hover:bg-gray-900 text-white font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg border border-gray-800 flex items-center justify-center"
+              >
+                <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                </svg>
+                <span className="text-sm">Apple</span>
+              </Button>
+            </motion.div>
           </div>
         </div>
       </div>
     </div>
-{/* Right Panel - Optimized Exploded Isometric Showcase */}
-<div className="hidden lg:flex flex-1 relative overflow-hidden bg-background border-l border-white/5">
+{/* Right Panel - Full Screen Image Loop */}
+<div className="hidden lg:flex flex-1 relative overflow-hidden bg-black">
   
-  {/* 1. Synced Background Layers */}
-  <div className="absolute inset-0 pointer-events-none overflow-hidden">
-    <motion.div
-      className="absolute top-1/2 -left-48 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px]"
-      animate={{ opacity: [0.4, 0.6, 0.4], scale: [1, 1.1, 1] }}
-      transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-    />
-    <motion.div
-      className="absolute -bottom-24 -right-24 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px]"
-      animate={{ x: [0, -30, 0], y: [0, -20, 0] }}
-      transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-    />
-    <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`, backgroundSize: '50px 50px' }} />
+  {/* Full Screen Background Image with Professional Ken Burns Effect */}
+  <div className="absolute inset-0">
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={currentImageIndex}
+        initial={{ scale: 1.1, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 1.2, ease: "easeInOut" }}
+        className="absolute inset-0"
+      >
+        <motion.img 
+          src={showcaseImages[currentImageIndex]} 
+          alt="AEKO Showcase"
+          className="w-full h-full object-cover object-center"
+          initial={{ scale: 1 }}
+          animate={{ scale: 1.1 }}
+          transition={{ duration: 10, ease: "linear", repeat: Infinity, repeatType: "reverse" }}
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = "/feeds/image1.jpg";
+          }}
+        />
+      </motion.div>
+    </AnimatePresence>
   </div>
 
-  {/* 2. Content Container */}
-  <div className="relative z-10 flex flex-col h-full w-full p-8 lg:p-12 overflow-hidden">    
-    
-    {/* Header Section */}
+  {/* Gradient Overlays - Multiple layers for depth */}
+  <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent z-10" />
+  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent z-10" />
+  <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/20 z-10" />
+
+  {/* Animated Grain Texture Overlay */}
+  <div className="absolute inset-0 z-15 opacity-[0.03] pointer-events-none">
+    <div className="absolute inset-0 animate-pulse" style={{
+      backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+    }} />
+  </div>
+
+  {/* Floating Particles Effect */}
+  <div className="absolute inset-0 z-15 pointer-events-none overflow-hidden">
+    {[...Array(6)].map((_, i) => (
+      <motion.div
+        key={i}
+        className="absolute w-1 h-1 bg-white/30 rounded-full"
+        initial={{ 
+          x: Math.random() * 100 + "%", 
+          y: Math.random() * 100 + "%",
+          opacity: 0 
+        }}
+        animate={{ 
+          y: [null, "-100%"],
+          opacity: [0, 0.6, 0]
+        }}
+        transition={{ 
+          duration: 8 + Math.random() * 4, 
+          repeat: Infinity, 
+          delay: Math.random() * 5,
+          ease: "linear"
+        }}
+      />
+    ))}
+  </div>
+
+  {/* Content Section */}
+  <div className="absolute bottom-0 left-0 right-0 z-30 p-10 lg:p-14">
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mb-10 text-center"
+      transition={{ delay: 0.3, duration: 0.6 }}
+      className="max-w-xl"
     >
-      <h2 className="text-foreground text-4xl font-bold tracking-tighter mb-2">Build Your Dedicated AI Workforce</h2>
-      <p className="text-muted-foreground text-base max-w-xl mx-auto font-medium">A modular system for deploying agents in Support, Sales, and Analytics.</p>
-    </motion.div>
+      {/* Animated Badge */}
+      <motion.div 
+        className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full mb-6"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.4, duration: 0.5 }}
+      >
+        <motion.div 
+          className="w-2 h-2 rounded-full bg-green-400"
+          animate={{ scale: [1, 1.2, 1], opacity: [1, 0.7, 1] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        />
+        <span className="text-white/90 text-sm font-medium tracking-wide">AI-Powered Platform</span>
+      </motion.div>
 
-    {/* 3. The Exploded Isometric View */}
-    <div className="flex-1 relative w-full flex justify-center items-center">
-      <div className="relative w-full max-w-3xl aspect-[16/10] z-0">
-        
-        {/* Main Dashboard - Central Focus */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9, rotateX: 15 }}
-          animate={{ opacity: 1, scale: 1, rotateX: 10 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="absolute inset-0 rounded-3xl border border-white/10 shadow-2xl shadow-primary/20 overflow-hidden bg-card"
-        >
-          <img 
-            src="/Dashboard.webp" 
-            alt="Main Dashboard"
-            className="w-full h-full object-cover object-top"
-          />
-          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background via-background/60 to-transparent" />
-        </motion.div>
+      <motion.h3 
+        className="text-white text-3xl lg:text-4xl font-bold mb-3 leading-tight"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5, duration: 0.5 }}
+      >
+        Create Amazing Content
+        <span className="block text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400">
+          With Intelligent AI Agents
+        </span>
+      </motion.h3>
 
-        {/* Drifting Card 1 - Leads List (Top Left) */}
-        <motion.div
-          initial={{ opacity: 0, x: 0, y: 0 }}
-          animate={{ x: -140, y: -100, rotate: -8, opacity: 1 }}
-          whileHover={{ scale: 1.05, x: -150, y: -110, zIndex: 20 }}
-          transition={{ duration: 0.8, type: "spring", bounce: 0.3 }}
-          className="absolute top-0 left-0 w-[280px] h-[180px] bg-background/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden cursor-pointer"
-        >
-          <img 
-            src="/leads.webp" 
-            alt="Leads List" 
-            className="w-full h-full object-cover object-left-top opacity-90" 
-          />
-          <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent pointer-events-none" />
-        </motion.div>
+      <motion.p 
+        className="text-white/70 text-base lg:text-lg leading-relaxed"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6, duration: 0.5 }}
+      >
+        Transform your creative workflow with cutting-edge AI that generates stunning images, videos, and more.
+      </motion.p>
 
-        {/* Drifting Card 2 - Analytics (Bottom Right) */}
-        <motion.div
-          initial={{ opacity: 0, x: 0, y: 0 }}
-          animate={{ x: 140, y: 100, rotate: 8, opacity: 1 }}
-          whileHover={{ scale: 1.05, x: 150, y: 110, zIndex: 20 }}
-          transition={{ duration: 0.8, type: "spring", bounce: 0.3, delay: 0.1 }}
-          className="absolute bottom-0 right-0 w-[300px] h-[200px] bg-background/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden cursor-pointer"
-        >
-          <img 
-            src="/analytics.webp" 
-            alt="Analytics Chart" 
-            className="w-full h-full object-cover object-right-bottom opacity-90" 
-          />
-          <div className="absolute inset-0 bg-gradient-to-bl from-primary/10 to-transparent pointer-events-none" />
-        </motion.div>
-
-        {/* Dynamic Glow behind the assembly */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-primary/20 blur-[120px] rounded-full z-[-1]" />
-      </div>
-    </div>
-
-    {/* 4. Minimalist Feature Ticker */}
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.8 }}
-      className="mt-auto pt-8 border-t border-white/5 flex items-center justify-between"
-    >
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
-          <Sparkles className="w-4 h-4 text-primary" />
-        </div>
-        <span className="text-xs font-bold uppercase tracking-widest text-white/70">Core Modules</span>
-      </div>
-      <div className="flex gap-8">
-        {["Support", "Outreach", "Imaging", "Synthesis", "Analytics"].map((item) => (
-          <span key={item} className="text-[11px] font-medium text-muted-foreground hover:text-primary transition-colors cursor-default">
-            {item}
+      {/* Feature Pills */}
+      <motion.div 
+        className="flex flex-wrap gap-3 mt-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.7, duration: 0.5 }}
+      >
+        {['Images', 'Videos', 'Agents', 'Automation'].map((feature) => (
+          <span 
+            key={feature}
+            className="px-3 py-1.5 bg-white/10 backdrop-blur-sm border border-white/10 rounded-lg text-white/80 text-xs font-medium"
+          >
+            {feature}
           </span>
         ))}
-      </div>
+      </motion.div>
     </motion.div>
+  </div>
+
+  {/* Navigation Dots - Styled */}
+  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 p-3 bg-black/20 backdrop-blur-md rounded-full z-40">
+    {showcaseImages.map((_, idx) => (
+      <motion.button
+        key={idx}
+        onClick={() => setCurrentImageIndex(idx)}
+        className="relative"
+        whileHover={{ scale: 1.2 }}
+        whileTap={{ scale: 0.9 }}
+      >
+        <div className={`h-2 rounded-full transition-all duration-500 ${
+          idx === currentImageIndex 
+            ? "w-8 bg-white" 
+            : "w-2 bg-white/30 hover:bg-white/50"
+        }`}
+        />
+      </motion.button>
+    ))}
+  </div>
+
+  {/* Side Progress Bar */}
+  <div className="absolute right-6 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-40">
+    {showcaseImages.map((_, idx) => (
+      <motion.div
+        key={idx}
+        className="w-1 rounded-full bg-white/20 overflow-hidden"
+        initial={{ height: 8 }}
+        animate={{ 
+          height: idx === currentImageIndex ? 24 : 8,
+          backgroundColor: idx === currentImageIndex ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.2)"
+        }}
+        transition={{ duration: 0.3 }}
+      >
+        {idx === currentImageIndex && (
+          <motion.div 
+            className="w-full h-full bg-white rounded-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
+        )}
+      </motion.div>
+    ))}
   </div>
 </div>
   </div>

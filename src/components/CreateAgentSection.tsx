@@ -333,9 +333,27 @@ const CreateAgentSection = () => {
                 </div>
               </div>
 
-              {/* Video Interface Demo */}
-              <div className="relative">
-                <div className="relative rounded-3xl p-4 sm:p-2 overflow-hidden shadow-2xl" style={{ borderRadius: '24px' }}>
+              {/* Optimized Image Interface Demo for Akobot AI */}
+              <div className="relative group">
+                {/* Outer Glow Effect */}
+                <motion.div
+                  className="absolute -inset-4 rounded-3xl blur-2xl"
+                  animate={{
+                    background: [
+                      'radial-gradient(circle, rgba(34, 197, 94, 0.3), rgba(16, 185, 129, 0.2), transparent)',
+                      'radial-gradient(circle, rgba(16, 185, 129, 0.3), rgba(34, 197, 94, 0.2), transparent)',
+                      'radial-gradient(circle, rgba(34, 197, 94, 0.3), rgba(16, 185, 129, 0.2), transparent)',
+                    ],
+                  }}
+                  transition={{
+                    duration: 4,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                  }}
+                />
+                
+                <div className="relative rounded-3xl p-3 sm:p-2 overflow-hidden shadow-2xl" style={{ borderRadius: '24px' }}>
+                  {/* Animated Border */}
                   <motion.div
                     className="absolute inset-0 rounded-3xl pointer-events-none"
                     style={{
@@ -350,25 +368,66 @@ const CreateAgentSection = () => {
                     transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
                   />
                   <div className="absolute inset-[2px] rounded-3xl bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-100 dark:to-emerald-100" style={{ borderRadius: '22px' }} />
-                  <div className="relative rounded-2xl overflow-hidden shadow-xl aspect-[21/9] sm:aspect-[1.5/1] flex flex-col bg-gray-900" style={{ borderRadius: '16px' }}>
-                    <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover z-0 opacity-100">
-                      <source src="/feeds/video19.mp4" type="video/mp4" />
-                    </video>
-                    <motion.div
-                      className="absolute inset-0 rounded-2xl pointer-events-none z-10"
-                      style={{
-                        padding: '2px',
-                        background: 'linear-gradient(135deg, #4B5563, #6B7280, #9CA3AF, #6B7280, #4B5563)',
-                        backgroundSize: '200% 200%',
-                        WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                        WebkitMaskComposite: 'xor',
-                        maskComposite: 'exclude',
-                      }}
-                      animate={{ backgroundPosition: ['0% 0%', '100% 100%', '0% 0%'] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+                  
+                  <div className="relative rounded-2xl overflow-hidden shadow-xl aspect-[1.5/1] flex flex-col bg-gray-900" style={{ borderRadius: '16px' }}>
+                    {/* Visual Asset with Ken Burns Effect */}
+                    <motion.img 
+                      src="/feeds/home_page.webp" 
+                      alt="Akobot AI - Multi-Flow Intelligence Core"
+                      initial={{ scale: 1.15 }}
+                      animate={{ scale: 1 }}
+                      transition={{ duration: 10, ease: "linear", repeat: Infinity, repeatType: "reverse" }}
+                      className="absolute inset-0 w-full h-full object-cover z-0"
                     />
-                    <div className="absolute inset-0 pointer-events-none z-20 shadow-[inset_0_0_100px_rgba(0,0,0,0.2)]" />
+                    
+                    {/* Gradient Overlays for Depth */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/30 z-10" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent z-10" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-green-500/5 via-transparent to-transparent z-10" />
+                    
+                    {/* Interactive Overlay */}
+                    <div className="absolute inset-0 pointer-events-none z-20 shadow-[inset_0_0_80px_rgba(0,0,0,0.3)]" />
+                    
+                    {/* Floating Particles Effect */}
+                    <div className="absolute inset-0 z-15 pointer-events-none overflow-hidden">
+                      {[...Array(5)].map((_, i) => (
+                        <motion.div
+                          key={i}
+                          className="absolute w-1 h-1 bg-green-400/40 rounded-full"
+                          initial={{ 
+                            x: Math.random() * 100 + "%", 
+                            y: Math.random() * 100 + "%",
+                            opacity: 0 
+                          }}
+                          animate={{ 
+                            y: [null, "-100%"],
+                            opacity: [0, 0.8, 0]
+                          }}
+                          transition={{ 
+                            duration: 6 + Math.random() * 4, 
+                            repeat: Infinity, 
+                            delay: Math.random() * 4,
+                            ease: "linear"
+                          }}
+                        />
+                      ))}
+                    </div>
+                    
+                    {/* Corner Accents */}
+                    <div className="absolute top-4 left-4 w-16 h-16 border-l-2 border-t-2 border-white/30 rounded-tl-lg z-20" />
+                    <div className="absolute top-4 right-4 w-16 h-16 border-r-2 border-t-2 border-white/30 rounded-tr-lg z-20" />
+                    <div className="absolute bottom-4 left-4 w-16 h-16 border-l-2 border-b-2 border-white/30 rounded-bl-lg z-20" />
+                    <div className="absolute bottom-4 right-4 w-16 h-16 border-r-2 border-b-2 border-white/30 rounded-br-lg z-20" />
                   </div>
+                </div>
+                
+                {/* Reflection Effect */}
+                <div className="absolute -bottom-20 left-1/2 -translate-x-1/2 w-[90%] h-20 blur-xl opacity-30">
+                  <img 
+                    src="/feeds/home_page.webp" 
+                    alt=""
+                    className="w-full h-full object-cover scale-y-[-1] opacity-50"
+                  />
                 </div>
               </div>
             </div>

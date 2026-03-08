@@ -32,6 +32,7 @@ import {
   ArrowLeftRight,
   Eraser,
   Wand2,
+  Shuffle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -160,6 +161,39 @@ const ImageToolsPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [modelPickerOpen, setModelPickerOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const randomPrompts = [
+    "A futuristic cyberpunk city at night with towering neon-lit skyscrapers, flying cars with glowing trails, holographic advertisements, rain-slicked streets reflecting colorful lights, cinematic composition, highly detailed, 8k resolution, volumetric fog",
+    "A majestic African lion with a flowing golden mane standing on a rocky cliff at golden hour, dramatic backlighting creating a silhouette, lush savanna landscape in the background, hyper-realistic photography, national geographic style",
+    "An enchanted magical forest with giant glowing mushrooms in various colors, fireflies illuminating the scene, fairy lights floating through the air, ancient twisted trees with glowing runes, mystical fog, fantasy art style",
+    "A steampunk mechanical robot with brass gears and copper wiring playing an electric guitar in a Victorian-era parlor, warm fireplace lighting, vintage posters on the wall, leather furniture, detailed illustration",
+    "A serene traditional Japanese garden in spring with cherry blossom trees in full bloom, pink petals falling, koi pond with graceful fish, stone lantern, torii gate in distance, peaceful atmosphere, soft natural lighting",
+    "An astronaut floating in deep space, Earth perfectly reflected in the curved helmet visor showing continents and oceans, distant stars and nebulae in background, dramatic spacecraft in foreground, cinematic lighting",
+    "A magnificent dragon made of transparent crystalline materials flying over snow-covered mountain range, ice crystals trailing from wings, aurora borealis in night sky, breath of cold mist, fantasy concept art",
+    "A cozy artisan coffee shop interior with exposed brick walls, warm Edison bulb lighting, vintage leather armchairs, shelves filled with books, espresso machine on counter, steam rising from cups, inviting atmosphere",
+    "A powerful warrior queen in elaborate golden armor with intricate filigree patterns, gemstone-encrusted crown, holding a legendary sword, commanding presence, epic fantasy portrait, dramatic lighting",
+    "A breathtaking mountain range at twilight with vibrant aurora borealis dancing across the sky in greens and purities, snow-capped peaks, misty valleys below, ethereal atmosphere, landscape photography",
+    "A vibrant underwater coral reef scene with tropical fish in every color, sea turtles gliding past,珊瑚 in rainbow colors, sunbeams penetrating from above, biodiverse marine ecosystem, photorealistic",
+    "A vintage classic motorcycle in a retro-styled garage, chrome details gleaming, vintage posters of pin-up models and racing posters on brick walls, workbench with tools, warm amber lighting",
+    "A fantasy castle on a floating island in the clouds, multiple towers with flags, cascading waterfalls falling into the void, rainbow mist, ancient trees, magical energy beams, concept art style",
+    "A minimalist ultra-modern bedroom in a luxury seaside villa, floor-to-ceiling windows overlooking endless ocean, clean lines, beige and white palette, king bed, infinity pool visible, serene vibe",
+    "A spectacular cosmic nebula with swirling colorful galaxies, newborn stars, cosmic dust clouds in purples and blues, distant planets, interstellar medium, space telescope photography style",
+    "A bustling Tokyo street food vendor stall at night, lantern strings glowing warmly, steam rising from cooking pots, delicious ramen bowls, busy neon signs in Japanese, rainy reflections on ground",
+    "A magnificent phoenix rising from vibrant orange and red flames, feathers with gradient from yellow to crimson, embers floating upward, powerful wings spread, rebirth symbolism, fantasy illustration",
+    "An ancient enchanted library with towering bookshelves reaching ceiling, floating magical books glowing, spiral staircase, crystal chandelier, dust particles in light beams, mysterious atmosphere",
+    "A glamorous fashion model on a high fashion runway, dramatic stage lighting, camera flashes, elaborate couture dress with intricate details, runway perspective, Vogue magazine style",
+    "A stunning bouquet of wildflowers in a crystal clear glass vase, peonies and roses and lavender, soft watercolor painting background with blend of pastels, artistic photography, light and airy",
+    "A hyper-realistic close-up of a human eye reflecting a cityscape, detailed iris with multiple colors, moisture droplets on surface, cinematic macro photography, dramatic depth of field",
+    "A tranquil zen meditation room with floor cushions, minimal aesthetic, bamboo walls, koi pond visible through window, soft diffused light, Japanese aesthetic, peaceful harmony",
+    "A explosive volcanic eruption at night, glowing lava rivers, ash clouds lit by molten rock, dramatic sky, satellite view or drone perspective, geological phenomenon, highly detailed",
+    "A whimsical candy land scene with giant lollipops, gumdrop mountains, chocolate river, cotton candy clouds, playful saturated colors, storybook illustration style, childhood wonder",
+    "A dark and moody gothic cathedral interior with stained glass windows casting colorful light, stone arches, candlelit atmosphere, fog, mysterious and atmospheric, dramatic shadows",
+  ];
+
+  const handleRandomPrompt = () => {
+    const randomIndex = Math.floor(Math.random() * randomPrompts.length);
+    setPrompt(randomPrompts[randomIndex]);
+  };
 
   const currentAvailableModels = toolMode === "image2image" ? IMAGE_TO_IMAGE_MODELS : imageModels;
 
@@ -993,7 +1027,21 @@ const ImageToolsPage = () => {
                     onKeyDown={(e) => e.key === "Enter" && e.ctrlKey && handleGenerate()}
                   />
                 </div>
-                <div className="flex justify-end px-4 py-2 border-t border-border bg-card">
+                <div className="flex items-center justify-between px-4 py-2 border-t border-border bg-card">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRandomPrompt}
+                    className="group relative overflow-hidden gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 hover:border-purple-500/40 hover:from-purple-500/20 hover:to-pink-500/20 transition-all duration-300"
+                  >
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 opacity-0 group-hover:opacity-10 transition-opacity"
+                      animate={{ x: ["-100%", "100%"] }}
+                      transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                    />
+                    <Shuffle className="w-4 h-4 text-purple-500 group-hover:text-purple-400 transition-colors" />
+                    <span className="text-xs font-medium bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent group-hover:from-purple-400 group-hover:to-pink-400 transition-all">Random</span>
+                  </Button>
                   <Button
                     onClick={handleGenerate}
                     disabled={!prompt.trim() || isGenerating}

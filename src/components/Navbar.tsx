@@ -1,6 +1,6 @@
 "use client";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
-import { Menu, X, MessageSquare, Image, Video, Sparkles, Bot, Plug, Film, Mic, Zap, ChevronDown, User, LogOut, Sun, Moon, BarChart3, BellRing, Mail, Presentation, Search, Ticket } from "lucide-react";
+import { Menu, X, MessageSquare, Image, Video, Sparkles, Bot, Plug, Film, Mic, Zap, ChevronDown, User, LogOut, Sun, Moon, BarChart3, BellRing, Mail, Presentation, Search, Ticket, Building2, GraduationCap, Heart, Landmark, Monitor, ShoppingCart } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -57,6 +57,24 @@ const Navbar = () => {
   { name: "TaskPing", description: "Smart Reminder System", icon: BellRing },
 ];
 
+const industryItems = [
+  { name: "SaaS & Tech Companies", description: "Support tickets, product analytics, meeting notes & bulk emails", icon: Monitor, path: "#" },
+  { name: "E-Commerce", description: "Customer tickets, SEO, sales analytics & campaign emails", icon: ShoppingCart, path: "#" },
+  { name: "Finance & FinTech", description: "Query tickets, secure meeting notes, analytics & payment reminders", icon: Landmark, path: "#" },
+  { name: "Education & EdTech", description: "Student support, faculty meeting notes, announcements & reminders", icon: GraduationCap, path: "#" },
+  { name: "Healthcare", description: "Patient handling, secure notes, and automated reminders", icon: Heart, path: "#" },
+  { name: "Enterprises & Corporate", description: "Scale AI agents across your entire organization", icon: Building2, path: "#" },
+];
+
+const learnItems = [
+  { name: "Blog", description: "Stay updated with latest AI news", icon: MessageSquare, path: "/blog" },
+  { name: "Documentation", description: "Technical guides and API refs", icon: Film, path: "/docs" },
+];
+
+const navLinks = [
+  { name: "Pricing", path: "/pricing" },
+  { name: "API", href: "/#developers" },
+];
   const featuresMenuItems = [
     {
       name: "Custom AI Agent",
@@ -96,11 +114,7 @@ const Navbar = () => {
     },
   ];
 
-  const navLinks = [
-    { name: "Industry", path: "/about" },
-    { name: "Learn", path: "/pricing" },
-    { name: "API", href: "/#developers" },
-  ];
+  
 
   return (
     <motion.nav
@@ -197,16 +211,14 @@ const Navbar = () => {
                   <div className="relative w-24 md:w-28 h-10 flex items-center overflow-visible">
                     <AnimatePresence mode="wait">
                       <motion.img 
-                        key={theme}
-                        src={theme === "dark" ? "/ako_dark.png" : "/ako.png"} 
-                        alt="AKO.ai Logo" 
-                        animate={{
-                          opacity: 1,
-                          scale: (isExpanded || isOpen) ? 1.5 : 1.3, 
-                          x: (isExpanded || isOpen) ? 1 : 0,
-                        }}
-                        className="absolute left-0 h-auto w-full max-w-[130px] origin-left object-contain" 
-                      />
+                          key={theme}
+                          src={theme === "dark" ? "/ako_dark.png" : "/ako.png"} 
+                          alt="AKO.ai Logo" 
+                          // Change this line:
+                          animate={{ opacity: 1 }} 
+                          // Remove the scale and x properties that were here
+                          className="absolute left-0 h-auto w-full max-w-[130px] origin-left object-contain" 
+                        />
                     </AnimatePresence>
                   </div>
                 </motion.div>
@@ -253,66 +265,79 @@ const Navbar = () => {
       View all tools <span className="text-lg">→</span>
     </button>
   </div>
-</DropdownMenuContent>
+              </DropdownMenuContent>
                   </DropdownMenu>
 
-                  {/* Features Dropdown */}
-                  <DropdownMenu 
-                  // onOpenChange={(open) => setIsExpanded(open)}
-                  >
-                    <DropdownMenuTrigger asChild>
-                      <motion.button
-                        className="text-xs cursor-pointer sm:text-sm text-white hover:text-white/90 transition-colors duration-200 flex items-center gap-1.5 px-2 sm:px-3 py-1 rounded-lg hover:bg-white/10"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        Features
-                        <ChevronDown className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
-                      </motion.button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-56 md:w-64 backdrop-blur-xl bg-card dark:bg-card border border-border shadow-xl">
-                      {featuresMenuItems.map((item) => {
-                        const Icon = item.icon;
-                        return (
-                          <DropdownMenuItem
-                            key={item.path}
-                            onClick={() => router.push(item.path)}
-                            className="cursor-pointer hover:bg-accent/50 dark:hover:bg-accent/50 transition-colors"
-                          >
-                            <Icon className="w-4 h-4 mr-2 text-primary" aria-hidden="true" />
-                            <div className="flex flex-col">
-                              <span className="font-medium text-foreground">{item.name}</span>
-                              <span className="text-xs text-muted-foreground">{item.description}</span>
-                            </div>
-                          </DropdownMenuItem>
-                        );
-                      })}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  {/* Industry Dropdown */}
+<DropdownMenu onOpenChange={(open) => setIsExpanded(open)}>
+  <DropdownMenuTrigger asChild>
+    <motion.button
+      className="text-xs md:text-sm cursor-pointer text-white hover:text-white/90 transition-colors duration-200 flex items-center gap-1.5 px-2 md:px-3 py-1.5 rounded-lg hover:bg-white/10 outline-none"
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+    >
+      Industry
+      <ChevronDown className="w-3 h-3 md:w-3.5 md:h-3.5 text-white" />
+    </motion.button>
+  </DropdownMenuTrigger>
+  <DropdownMenuContent 
+    align="center" 
+    sideOffset={20}
+    className="w-[580px] p-4 grid grid-cols-2 gap-2 backdrop-blur-2xl bg-zinc-900/95 border border-white/10 shadow-2xl rounded-2xl"
+  >
+    {industryItems.map((item) => {
+      const Icon = item.icon;
+      return (
+        <DropdownMenuItem
+          key={item.name}
+          onClick={() => router.push(item.path)}
+          className="flex items-start gap-3 p-3 cursor-pointer rounded-xl hover:bg-white/5 focus:bg-white/5 transition-colors border-none outline-none"
+        >
+          <div className="flex items-center justify-center p-2 rounded-lg bg-white/5 text-purple-400">
+            <Icon className="w-5 h-5" aria-hidden="true" />
+          </div>
+          <div className="flex flex-col">
+            <span className="font-bold text-sm text-white">{item.name}</span>
+            <span className="text-[11px] text-zinc-400 leading-snug">{item.description}</span>
+          </div>
+        </DropdownMenuItem>
+      );
+    })}
+    <div className="col-span-2 mt-2 pt-3 border-t border-white/10 px-2">
+      <button 
+        onClick={() => router.push("/industries")}
+        className="text-sm font-semibold text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-2"
+      >
+        View all industries <span className="text-lg">→</span>
+      </button>
+    </div>
+  </DropdownMenuContent>
+</DropdownMenu>
 
-                  {navLinks.map((link) =>
-                    link.path ? (
-                      <motion.button
-                        key={link.name}
-                        onClick={() => router.push(link.path!)}
-                        className="text-xs cursor-pointer md:text-sm text-white hover:text-white/90 transition-colors duration-200 px-2 md:px-3 py-1.5 rounded-lg hover:bg-white/10"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        {link.name}
-                      </motion.button>
-                    ) : (
-                      <motion.a
-                        key={link.name}
-                        href={link.href}
-                        className="text-xs md:text-sm cursor-pointer text-white hover:text-white/90 transition-colors duration-200 px-2 md:px-3 py-1.5 rounded-lg hover:bg-white/10"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        {link.name}
-                      </motion.a>
-                    )
-                  )}
+<DropdownMenu onOpenChange={(open) => setIsExpanded(open)}>
+    <DropdownMenuTrigger asChild>
+      <motion.button className="text-xs md:text-sm cursor-pointer text-white hover:text-white/90 transition-colors duration-200 flex items-center gap-1.5 px-2 md:px-3 py-1.5 rounded-lg hover:bg-white/10 outline-none">
+        Learn <ChevronDown className="w-3 h-3 md:w-3.5 md:h-3.5 text-white" />
+      </motion.button>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent align="center" sideOffset={20} className="w-[280px] p-2 backdrop-blur-2xl bg-zinc-900/95 border border-white/10 rounded-xl shadow-2xl">
+      {learnItems.map((item) => (
+        <DropdownMenuItem key={item.name} className="flex items-center gap-3 p-2.5 rounded-lg cursor-pointer hover:bg-white/5 text-white">
+          <item.icon size={16} className="text-purple-400" />
+          <span className="text-sm font-medium">{item.name}</span>
+        </DropdownMenuItem>
+      ))}
+    </DropdownMenuContent>
+  </DropdownMenu>
+
+  <motion.button onClick={() => router.push("/pricing")} className="text-xs md:text-sm text-white px-3 py-1.5 rounded-lg hover:bg-white/10">
+    Pricing
+  </motion.button>
+
+  <motion.button onClick={() => router.push("/about")} className="text-xs md:text-sm text-white px-3 py-1.5 rounded-lg hover:bg-white/10">
+    About us
+  </motion.button>
+  
                   
                   {/* Theme Toggle - Desktop */}
                   <TooltipProvider>
@@ -544,12 +569,12 @@ const Navbar = () => {
                 </div>
 
                 {navLinks.map((link) =>
-                  link.path ? (
+                  link.name ? (
                     <motion.button
                       key={link.name}
                       onClick={() => {
                         setIsOpen(false);
-                        router.push(link.path!);
+                        router.push(link.name!);
                       }}
                       className="block w-full text-left px-3 py-2.5 rounded-lg text-sm text-foreground dark:text-white hover:text-foreground dark:hover:text-white/90 hover:bg-accent/50 dark:hover:bg-white/10 transition-colors"
                       whileHover={{ x: 4 }}

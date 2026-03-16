@@ -1,6 +1,6 @@
 "use client";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
-import { Menu, X, MessageSquare, Image, Video, Sparkles, Bot, Plug, Film, Mic, Zap, ChevronDown, User, LogOut, Sun, Moon } from "lucide-react";
+import { Menu, X, MessageSquare, Image, Video, Sparkles, Bot, Plug, Film, Mic, Zap, ChevronDown, User, LogOut, Sun, Moon, BarChart3, BellRing, Mail, Presentation, Search, Ticket } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -48,32 +48,14 @@ const Navbar = () => {
     };
   }, [isOpen]);
 
-  const modelsMenuItems = [
-    { 
-      name: "LLM Agent", 
-      icon: MessageSquare, 
-      path: "/dashboard/tools-old/agent",
-      description: "Chat with AI agents"
-    },
-    { 
-      name: "Image Generation", 
-      icon: Image, 
-      path: "/dashboard/tools-old/image",
-      description: "Create stunning images"
-    },
-    // { 
-    //   name: "Video Generation", 
-    //   icon: Video, 
-    //   path: "/dashboard/tools-old/video",
-    //   description: "Generate videos with AI"
-    // },
-    { 
-      name: "Custom Agent", 
-      icon: Sparkles, 
-      path: "/dashboard/agent-store",
-      description: "Build your own agent"
-    },
-  ];
+  const agenticToolsItems = [
+  { name: "TicketPilot", description: "Smart AI Ticketing Agent", icon: Ticket },
+  { name: "SEO SearchBoost", description: "Advanced SEO Engine", icon: Search },
+  { name: "Analytica AI", description: "Data Analytics AI", icon: BarChart3 },
+  { name: "MeetingPilot", description: "Automatic Meeting MoM Generator", icon: Presentation },
+  { name: "MailBlaster", description: "Bulk Email Automation", icon: Mail },
+  { name: "TaskPing", description: "Smart Reminder System", icon: BellRing },
+];
 
   const featuresMenuItems = [
     {
@@ -115,8 +97,8 @@ const Navbar = () => {
   ];
 
   const navLinks = [
-    { name: "About us", path: "/about" },
-    { name: "Pricing", path: "/pricing" },
+    { name: "Industry", path: "/about" },
+    { name: "Learn", path: "/pricing" },
     { name: "API", href: "/#developers" },
   ];
 
@@ -131,7 +113,7 @@ const Navbar = () => {
       <motion.div
         className="relative"
         animate={{
-          width: isExpanded || isOpen ? "100%" : "auto",
+          width: isOpen ? "100%" : "auto",
         }}
         transition={{
           duration: 0.4,
@@ -245,24 +227,33 @@ const Navbar = () => {
                         <ChevronDown className="w-3 h-3 md:w-3.5 md:h-3.5 text-white" />
                       </motion.button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-56 md:w-64 backdrop-blur-xl bg-card dark:bg-card border border-border shadow-xl">
-                      {modelsMenuItems.map((item) => {
-                        const Icon = item.icon;
-                        return (
-                          <DropdownMenuItem
-                            key={item.path}
-                            onClick={() => router.push(item.path)}
-                            className="cursor-pointer hover:bg-accent/50 dark:hover:bg-accent/50 transition-colors"
+                   <DropdownMenuContent 
+                        align="center" 
+                        sideOffset={20} 
+                        className="w-[520px] p-4 grid grid-cols-2 gap-2 backdrop-blur-2xl bg-zinc-900/95 border border-white/10 rounded-2xl shadow-2xl"
+                      >
+                        {agenticToolsItems.map((item) => (
+                          <DropdownMenuItem 
+                            key={item.name} 
+                            className="flex items-start gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 focus:bg-white/5 transition-colors border-none outline-none"
                           >
-                            <Icon className="w-4 h-4 mr-2 text-primary" aria-hidden="true" />
-                            <div className="flex flex-col">
-                              <span className="font-medium text-foreground">{item.name}</span>
-                              <span className="text-xs text-muted-foreground">{item.description}</span>
+                            <div className="p-2.5 rounded-lg bg-white/5 text-purple-400">
+                              <item.icon size={20} />
                             </div>
-                          </DropdownMenuItem>
-                        );
-                      })}
-                    </DropdownMenuContent>
+                            <div className="flex flex-col">
+                              <span className="font-bold text-sm text-white">{item.name}</span>
+                              <span className="text-xs text-zinc-400 leading-relaxed">{item.description}</span>
+                            </div>
+                    </DropdownMenuItem>
+  ))}
+  
+  {/* The "View all tools" footer link */}
+  <div className="col-span-2 mt-2 pt-3 border-t border-white/10 px-2">
+    <button className="text-sm font-semibold text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-2">
+      View all tools <span className="text-lg">→</span>
+    </button>
+  </div>
+</DropdownMenuContent>
                   </DropdownMenu>
 
                   {/* Features Dropdown */}
@@ -444,16 +435,6 @@ const Navbar = () => {
                     </Button>
                   </motion.div>
                   
-                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={() => router.push("/auth/sign-in")}
-                      className="bg-white text-purple-900 hover:bg-white/90 font-semibold shadow-lg text-xs md:text-sm px-2 md:px-4"
-                    >
-                      Start Creating
-                    </Button>
-                  </motion.div>
                     </>
                   )}
                 </div>
@@ -493,34 +474,44 @@ const Navbar = () => {
               <div className="absolute inset-0 dark:bg-gradient-to-br dark:from-primary/5 dark:via-transparent dark:to-transparent bg-gradient-to-br from-indigo-50/30 via-blue-50/20 to-purple-50/30 rounded-2xl pointer-events-none" />
               <div className="relative z-10 px-4 sm:px-6 py-4 sm:py-6 space-y-3 sm:space-y-4 max-h-[85vh] overflow-y-auto">
                 {/* Mobile Models Menu */}
-                <div>
-                  <div className="text-sm font-semibold text-foreground dark:text-white mb-3 px-2">Models</div>
-                  <div className="space-y-1">
-                    {modelsMenuItems.map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <motion.a
-                          key={item.path}
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setIsOpen(false);
-                            router.push(item.path);
-                          }}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground dark:text-white hover:text-foreground dark:hover:text-white/90 hover:bg-accent/50 dark:hover:bg-white/10 transition-colors"
-                          whileHover={{ x: 4 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          <Icon className="w-4 h-4 text-primary dark:text-white" />
-                          <div className="flex flex-col">
-                            <span className="font-medium text-foreground dark:text-white">{item.name}</span>
-                            <span className="text-xs text-muted-foreground dark:text-white/70">{item.description}</span>
-                          </div>
-                        </motion.a>
-                      );
-                    })}
-                  </div>
-                </div>
+              {/* Mobile Agentic Tools Menu */}
+<div>
+  <div className="text-sm font-semibold text-foreground dark:text-white mb-3 px-2">
+    Agentic tools
+  </div>
+  <div className="space-y-1">
+    {agenticToolsItems.map((item) => {
+      const Icon = item.icon;
+      return (
+        <motion.a
+          key={item.name} // Changed key to item.name since paths might be empty
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            setIsOpen(false);
+            if (item.name) router.push(item.name);
+          }}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground dark:text-white hover:text-foreground dark:hover:text-white/90 hover:bg-accent/50 dark:hover:bg-white/10 transition-colors"
+          whileHover={{ x: 4 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          {/* Using a background wrapper for the icon to match the desktop look */}
+          <div className="flex items-center justify-center p-1.5 rounded-md bg-white/5 text-purple-400">
+            <Icon className="w-4 h-4" />
+          </div>
+          <div className="flex flex-col">
+            <span className="font-medium text-foreground dark:text-white">
+              {item.name}
+            </span>
+            <span className="text-xs text-muted-foreground dark:text-white/70">
+              {item.description}
+            </span>
+          </div>
+        </motion.a>
+      );
+    })}
+  </div>
+</div>
 
                 {/* Mobile Features Menu */}
                 <div>
@@ -682,18 +673,6 @@ const Navbar = () => {
                       }}
                     >
                       Sign In
-                    </Button>
-                  </motion.div>
-                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    <Button
-                      variant="default"
-                      className="w-full bg-white text-purple-900 hover:bg-white/90 font-semibold"
-                      onClick={() => {
-                        setIsOpen(false);
-                        router.push("/auth/sign-in");
-                      }}
-                    >
-                      Start Creating
                     </Button>
                   </motion.div>
                     </>

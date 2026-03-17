@@ -11,14 +11,16 @@ import {
   Bot,
   Check,
   Shield,
-  Zap,
   Plug,
   Layers,
   Sparkles,
   ArrowRight,
   Star,
   Rocket,
+  Mail,
 } from "lucide-react";
+import { useState } from "react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -96,16 +98,55 @@ const whyPoints = [
   "Scalable infrastructure for growing businesses",
 ];
 
-const securityPoints = [
-  "Data security",
-  "System reliability",
-  "Ethical AI deployment",
-  "Performance optimization",
-  "Business-grade infrastructure",
+const securityFeatures = [
+  {
+    title: "Advanced guardrails for brand-safe responses",
+    desc: "AKOBOT agents are tuned to your brand's unique tone, voice, and policies. Our guardrails ensure every response stays professional, on-topic, and compliant with your industry's rules and regulations.",
+  },
+  {
+    title: "Evidence-based, accurate responses",
+    desc: "Every answer is grounded in your own business data — your docs, FAQs, and product info. No hallucinations, no off-topic replies. Just reliable responses your customers can trust.",
+  },
+  {
+    title: "Security and privacy of your customer's data",
+    desc: "Customer conversations are encrypted end-to-end and never sold or shared with third parties. Your customer data stays yours — always.",
+  },
+  {
+    title: "Privacy of LLM training data",
+    desc: "We do not use your business data or conversations to train our AI models. What happens in your workspace stays in your workspace.",
+  },
+];
+
+const faqs = [
+  {
+    q: "Can I upload my own documents for AKOBOT to provide answers?",
+    a: "Yes. You can train your AKOBOT agent on your own documents — PDFs, FAQs, product manuals, help articles, and more. The agent learns from your content and uses it to answer customer questions accurately.",
+  },
+  {
+    q: "Do I need coding skills to set up AKOBOT?",
+    a: "No coding required at all. AKOBOT is built for non-technical users. You can create, train, and deploy a fully functional AI agent in minutes using our no-code builder.",
+  },
+  {
+    q: "Is AKOBOT available on WhatsApp?",
+    a: "Yes. AKOBOT supports WhatsApp, Web, Slack, Discord, Email, and more. You can deploy the same agent across multiple channels from a single dashboard.",
+  },
+  {
+    q: "Can AKOBOT respond to queries from my e-commerce website?",
+    a: "Absolutely. AKOBOT integrates with your website and e-commerce platforms like Shopify. It can answer product questions, help customers track orders, recommend products, and even share discount codes.",
+  },
+  {
+    q: "Which AI models does AKOBOT use?",
+    a: "AKOBOT is powered by leading AI models including GPT-4, Claude, and Sarvam. You can choose the model that best fits your use case, and your agents will improve with every conversation.",
+  },
+  {
+    q: "How long does it take to go live?",
+    a: "Most businesses go live within an hour. Simply connect your data sources, configure your agent's tone and behaviour, and deploy — no lengthy onboarding or technical setup needed.",
+  },
 ];
 
 const AboutUsPage = () => {
   const router = useRouter();
+  const [contactForm, setContactForm] = useState({ email: "", message: "" });
 
   return (
     <main className="min-h-screen bg-background text-foreground overflow-x-hidden w-full relative">
@@ -137,12 +178,10 @@ const AboutUsPage = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             >
-              Build Your{" "}
+              Build Your AI Workforce &amp;{" "}
               <span className="bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">
-                AI Workforce
+                Automate Your Business Operations
               </span>
-              .<br />
-              Automate Everything.
             </motion.h1>
             
             <motion.p
@@ -247,6 +286,66 @@ const AboutUsPage = () => {
                 </motion.li>
               ))}
             </motion.ul>
+          </div>
+        </section>
+
+        {/* Win and Retain Section */}
+        <section className="py-20 px-4 sm:px-6 lg:px-8 border-t border-border/50 relative">
+          <div className="mx-auto max-w-4xl text-center">
+            <motion.h2
+              className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 leading-tight"
+              {...fadeIn}
+            >
+              Deliver 24/7 Customer Support with Smart AI Chat and Voice Agents
+            </motion.h2>
+            <motion.p
+              className="text-lg sm:text-xl text-muted-foreground mb-3"
+              {...fadeIn}
+            >
+              Now sell and service in 50+ languages. At 60% lower operating costs
+            </motion.p>
+            <motion.p
+              className="text-lg font-medium text-primary mb-10"
+              {...fadeIn}
+            >
+              Works with WhatsApp, Web, Shopify, Email, CRM.
+            </motion.p>
+
+            <motion.div className="relative max-w-xl mx-auto mb-6" {...fadeIn}>
+              <div className="absolute -left-28 top-1/2 -translate-y-1/2 hidden md:flex flex-col items-end gap-1">
+                <span className="text-sm text-muted-foreground italic" style={{ fontFamily: "cursive" }}>
+                  Enter Website Url
+                </span>
+                <ArrowRight className="w-5 h-5 text-muted-foreground rotate-45 self-end mr-2" />
+              </div>
+              <div className="flex items-center gap-2 rounded-full border border-border bg-background px-5 py-3 shadow-sm">
+                <input
+                  type="text"
+                  placeholder="Go Live! Resolve 80% sales and support queries"
+                  className="flex-1 bg-transparent text-sm text-muted-foreground outline-none placeholder:text-muted-foreground/60 min-w-0"
+                />
+                <Button
+                  size="sm"
+                  className="rounded-full px-4 bg-primary text-primary-foreground hover:bg-primary/90 shrink-0 gap-1"
+                  onClick={() => router.push("/auth/sign-in")}
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Try for free
+                </Button>
+              </div>
+            </motion.div>
+
+            <motion.div
+              className="flex flex-wrap items-center justify-center gap-5 text-sm text-muted-foreground"
+              {...fadeIn}
+            >
+              {["No sign-up", "No credit card", "Forever free plan", "Instant setup"].map((item, i) => (
+                <span key={i} className="flex items-center gap-1.5">
+                  <Check className="w-4 h-4 text-primary shrink-0" />
+                  {item}
+                </span>
+              ))}
+            </motion.div>
           </div>
         </section>
 
@@ -421,48 +520,90 @@ const AboutUsPage = () => {
 
         {/* Security Section */}
         <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-muted/30 to-background dark:from-muted/10 dark:to-background relative">
-          <div className="mx-auto max-w-5xl">
-            <motion.div className="text-center mb-12" {...fadeIn}>
-              <div className="flex justify-center mb-6">
-                <div className="rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 p-6">
-                  <Shield className="w-12 h-12 text-primary" />
-                </div>
+          <div className="mx-auto max-w-6xl">
+            <motion.div className="text-center mb-14" {...fadeIn}>
+              <div className="inline-flex items-center gap-2 mb-4">
+                <Shield className="w-5 h-5 text-primary" />
+                <span className="text-sm font-semibold text-primary uppercase tracking-wider">Security & Privacy</span>
               </div>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4">
-                Secure, Reliable &{" "}
-                <span className="text-primary">Responsible AI</span>
+                Security and privacy
               </h2>
-              <p className="text-lg text-muted-foreground mb-8">
-                We prioritize:
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                AKOBOT ensures security, privacy, and trust in every interaction
               </p>
             </motion.div>
-            
-            <motion.ul
-              className="flex flex-wrap justify-center gap-4 mb-10"
+
+            <motion.div
+              className="grid sm:grid-cols-2 gap-6"
               variants={staggerContainer}
               initial="initial"
               whileInView="whileInView"
-              viewport={{ once: true }}
+              viewport={{ once: true, margin: "-50px" }}
             >
-              {securityPoints.map((point, i) => (
-                <motion.li
+              {securityFeatures.map((item, i) => (
+                <motion.div
                   key={i}
-                  className="flex items-center gap-3 px-6 py-3 rounded-xl bg-card border border-border/50 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 text-foreground font-medium transition-all"
+                  className="group rounded-2xl border border-border/50 bg-card/50 p-6 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all"
                   variants={fadeIn}
-                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileHover={{ scale: 1.01, y: -2 }}
                 >
-                  <Zap className="w-5 h-5 text-primary shrink-0" />
-                  {point}
-                </motion.li>
+                  <div className="flex items-start gap-4">
+                    <div className="rounded-xl bg-primary/10 p-3 group-hover:bg-primary/20 transition-colors shrink-0">
+                      <Shield className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-foreground mb-2 leading-snug">
+                        {item.title}
+                      </h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {item.desc}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
               ))}
-            </motion.ul>
-            
+            </motion.div>
+
             <motion.p
-              className="text-center text-lg font-semibold text-foreground"
+              className="text-center text-base text-muted-foreground mt-10"
               {...fadeIn}
             >
               Your automation runs securely and reliably at scale.
             </motion.p>
+          </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section className="py-20 px-4 sm:px-6 lg:px-8 border-t border-border/50 relative">
+          <div className="mx-auto max-w-3xl">
+            <motion.div className="text-center mb-12" {...fadeIn}>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4">
+                Frequently asked questions
+              </h2>
+              <p className="text-lg text-muted-foreground">
+                Everything you need to know about AKOBOT
+              </p>
+            </motion.div>
+
+            <motion.div {...fadeIn}>
+              <Accordion type="single" collapsible className="w-full space-y-3">
+                {faqs.map((faq, i) => (
+                  <AccordionItem
+                    key={i}
+                    value={`item-${i}`}
+                    className="rounded-xl border border-border/50 bg-card/50 px-6 hover:border-primary/30 transition-colors"
+                  >
+                    <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline py-5 text-base">
+                      {faq.q}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground leading-relaxed pb-5">
+                      {faq.a}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </motion.div>
           </div>
         </section>
 
@@ -500,6 +641,70 @@ const AboutUsPage = () => {
               </Button>
             </div>
           </motion.div>
+        </section>
+
+        {/* Contact Us Section */}
+        <section className="py-20 px-4 sm:px-6 lg:px-8 border-t border-border/50 relative">
+          <div className="mx-auto max-w-5xl">
+            <motion.div
+              className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.6 }}
+            >
+              {/* Left */}
+              <div className="space-y-5">
+                <h2 className="text-3xl sm:text-4xl font-bold text-foreground leading-tight">
+                  Contact us
+                </h2>
+                <p className="text-base text-muted-foreground leading-relaxed">
+                  Use this form to send your business use case, technical or pricing queries, demo requests or FAQs
+                </p>
+                <a
+                  href="mailto:hello@akobot.ai"
+                  className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
+                >
+                  <Mail className="w-4 h-4 shrink-0" />
+                  hello@akobot.ai
+                </a>
+              </div>
+
+              {/* Right — form */}
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-foreground">Email</label>
+                  <input
+                    type="email"
+                    placeholder="your@email.com"
+                    value={contactForm.email}
+                    onChange={(e) => setContactForm((prev) => ({ ...prev, email: e.target.value }))}
+                    className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none focus:border-primary/50 transition-colors"
+                    suppressHydrationWarning
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-foreground">Message</label>
+                  <textarea
+                    rows={4}
+                    placeholder="How can we help you?"
+                    value={contactForm.message}
+                    onChange={(e) => setContactForm((prev) => ({ ...prev, message: e.target.value }))}
+                    className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none focus:border-primary/50 transition-colors resize-none"
+                    suppressHydrationWarning
+                  />
+                </div>
+                <Button
+                  className="w-full py-6 text-base font-semibold rounded-lg bg-linear-to-r from-violet-600 to-purple-500 hover:from-violet-700 hover:to-purple-600 text-white shadow-lg shadow-violet-500/20 transition-all"
+                  onClick={() => {
+                    setContactForm({ email: "", message: "" });
+                  }}
+                >
+                  Send Message
+                </Button>
+              </div>
+            </motion.div>
+          </div>
         </section>
 
         <Footer />

@@ -4,15 +4,15 @@ import { motion } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 
 const videoModels = [
-  { id: 1, title: "T2Video", description: "Generate stunning cinematic videos from simple text prompts.", video: "/feeds/video1.mp4" },
-  { id: 2, title: "AI Editing", description: "Transform and modify existing video clips with AI precision.", video: "/feeds/video2.mp4" },
-  { id: 3, title: "Video Upscale", description: "Enhance video resolution and clarity up to 4K quality.", video: "/feeds/video11.mp4" },
-  { id: 4, title: "Motion Synthesis", description: "Add realistic motion and fluid animations to static scenes.", video: "/feeds/video4.mp4" },
-  { id: 5, title: "Style Transfer", description: "Apply artistic styles and cinematic filters to your footage.", video: "/feeds/video5.mp4" },
-  { id: 6, title: "Frame Interpolation", description: "Create buttery smooth slow-motion by generating extra frames.", video: "/feeds/video6.mp4" },
-  { id: 7, title: "Video2Video", description: "Transform one video into another with AI-powered conversion.", video: "/feeds/video7.mp4" },
-  { id: 8, title: "Video2Image", description: "Convert video clips into stunning high-res images.", video: "/feeds/video8.mp4" },
-  { id: 9, title: "Image2Video", description: "Bring your images to life by transforming them into dynamic videos.", video: "/feeds/video9.mp4" },
+  { id: 1, title: "Text to Video AI", description: "Generate stunning cinematic videos from any text prompt using Sora 2, Kling AI, Runway, and more.", video: "/feeds/video1.mp4" },
+  { id: 2, title: "AI Video Editing", description: "Transform and enhance existing video clips with AI-powered editing — no timeline skills needed.", video: "/feeds/video2.mp4" },
+  { id: 3, title: "4K Video Upscaler", description: "Upscale and enhance video resolution to 4K quality using AI video enhancement.", video: "/feeds/video11.mp4" },
+  { id: 4, title: "AI Motion Synthesis", description: "Add realistic motion and fluid animations to static images and scenes with AI.", video: "/feeds/video4.mp4" },
+  { id: 5, title: "AI Style Transfer", description: "Apply cinematic styles, filters, and artistic looks to any video with AI.", video: "/feeds/video5.mp4" },
+  { id: 6, title: "Slow Motion AI", description: "Create buttery-smooth slow-motion videos by AI-generating extra frames.", video: "/feeds/video6.mp4" },
+  { id: 7, title: "Video to Video AI", description: "Transform any video into a completely new style using AI video-to-video conversion.", video: "/feeds/video7.mp4" },
+  { id: 8, title: "AI Video to Image", description: "Extract and convert video frames into stunning high-resolution AI images.", video: "/feeds/video8.mp4" },
+  { id: 9, title: "Image to Video AI", description: "Bring your photos to life — transform any static image into a dynamic AI video.", video: "/feeds/video9.mp4" },
 ];
 
 const VideoToolsFeaturesSection = () => {
@@ -68,13 +68,13 @@ const VideoToolsFeaturesSection = () => {
           >
             <div className="flex flex-wrap items-center gap-5 mb-2">
               <h2 className="text-[2.5rem] md:text-5xl lg:text-6xl font-black tracking-tighter leading-tight text-foreground">
-                Video Tool <span className="gradient-text">Showcase</span>
+                AI Video <span className="gradient-text">Showcase</span>
               </h2>
               <span className="px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 text-white text-base font-bold shadow-lg shadow-purple-500/25">
-                Coming Soon
+                Early Access
               </span>
             </div>
-            <p className="mt-1 text-base font-light text-muted-foreground max-w-2xl hidden md:block">
+            <p className="mt-1 text-base font-light text-muted-foreground max-w-3xl hidden md:block">
               Slow-scrolling cinematic previews of our core AI video capabilities.
             </p>
           </motion.div>

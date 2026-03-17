@@ -207,12 +207,11 @@ const ShowcaseSection = () => {
             </div>
 
             <p className="text-lg text-muted-foreground dark:text-white/80 leading-relaxed mb-8">
-              Join thousands of creators, designers, and developers who are using AEKO to bring their creative visions to life. 
-              Generate stunning images, create amazing videos, and build powerful AI agents—all in one platform.
+              Join thousands of creators, designers, and businesses using AKOBOT.ai to build custom AI agents, generate stunning AI images, and create AI videos — all in one platform. No code required.
             </p>
 
             <Button size="lg" className="group gap-2 px-8 py-6 text-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-2 border-border dark:border-white/30">
-              Start Creating Now
+              Start Free — No Credit Card Needed
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Button>
           </motion.div>

@@ -451,7 +451,7 @@ const Navbar = () => {
                       onClick={() => router.push("/auth/sign-in")}
                       className="bg-white text-purple-900 hover:bg-white/90 font-semibold shadow-lg text-xs md:text-sm px-2 md:px-4"
                     >
-                      Start Creating
+                      Start Free
                     </Button>
                   </motion.div>
                     </>
@@ -693,7 +693,7 @@ const Navbar = () => {
                         router.push("/auth/sign-in");
                       }}
                     >
-                      Start Creating
+                      Start Free
                     </Button>
                   </motion.div>
                     </>

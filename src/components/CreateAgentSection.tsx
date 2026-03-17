@@ -154,23 +154,35 @@ const CreateAgentSection = () => {
 
   return (
     <TooltipProvider>
-      <section className="py-24 lg:py-32 relative overflow-hidden w-full bg-white dark:bg-transparent">
-        {/* Grid - Light Mode: dark lines on light bg */}
-        <div className="absolute inset-0 dark:hidden opacity-[0.4]" style={{
-          backgroundImage: `
-            linear-gradient(rgba(0, 0, 0, 0.06) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0, 0, 0, 0.06) 1px, transparent 1px)
-          `,
-          backgroundSize: "50px 50px",
-        }} />
-        {/* Grid - Dark Mode: white lines on dark bg */}
-        <div className="absolute inset-0 hidden dark:block opacity-[0.08]" style={{
-          backgroundImage: `
-            linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px)
-          `,
-          backgroundSize: "50px 50px",
-        }} />
+      <section className="py-24 lg:py-32 relative overflow-hidden w-full bg-gradient-to-b from-background to-muted/20 dark:bg-black">
+        {/* Deep Black Base - Only for Dark Mode */}
+        <div className="absolute inset-0" style={{
+            backgroundImage: `
+              linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px)
+            `,
+            backgroundSize: "50px 50px",
+          }} ></div>
+        {/* Subtle Grid Pattern - Light Mode */}
+        <div className="absolute inset-0 opacity-[0.03] dark:hidden">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `
+              linear-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(0, 0, 0, 0.1) 1px, transparent 1px)
+            `,
+            backgroundSize: "50px 50px",
+          }} />
+        </div>
+        {/* Subtle Grid Pattern - Dark Mode */}
+        <div className="absolute inset-0 opacity-8 hidden dark:block">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `
+              linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px)
+            `,
+            backgroundSize: "50px 50px",
+          }} />
+        </div>
 
         <div className="container mx-auto px-4 lg:px-8 relative z-10">
           {/* Header */}
@@ -181,11 +193,10 @@ const CreateAgentSection = () => {
             transition={{ duration: 0.5 }}
             className="text-center mb-12 relative z-10"
           >
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4">
-              Create Custom AI Agents with{" "}
-              <span className="gradient-text">Multi-Flow Intelligence</span>{" "}
-              for Any Use Case
-            </h2>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4">
+              All-in-One <span className="gradient-text">Custom AI Agent Builder</span>{" "}
+              for Smarter Customer Experience
+            </h1>
           </motion.div>
 
           {/* Left / Center (playground) / Right */}
@@ -247,7 +258,7 @@ const CreateAgentSection = () => {
                       onChange={(e) => setAgentDescription(e.target.value)}
                       placeholder="Describe agent personality (e.g., 'Handle Shopify support tickets')"
                       rows={4}
-                      className="w-full min-h-[104px] px-4 py-3.5 rounded-xl bg-secondary/50 dark:bg-black/95 text-foreground placeholder:text-muted-foreground/60 border border-border dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-primary/60 focus:border-primary/60 transition-all duration-300 resize-none text-sm leading-relaxed"
+                      className="w-full min-h-[104px] px-4 py-3.5 rounded-xl bg-black/95 text-foreground placeholder:text-muted-foreground/60 border border-white/10 focus:outline-none focus:ring-2 focus:ring-primary/60 focus:border-primary/60 transition-all duration-300 resize-none text-sm leading-relaxed"
                     />
                   </div>
 
@@ -313,9 +324,7 @@ const CreateAgentSection = () => {
           {/* Platform Description Text */}
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.3 }} className="text-center mt-8">
             <p className="text-lg text-foreground max-w-2xl mx-auto font-medium">
-              All-in-one AI platform for <span className="bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent font-bold">chat</span>
-              , <span className="bg-gradient-to-r from-green-400 via-yellow-500 to-orange-500 bg-clip-text text-transparent font-bold">images</span>
-              , and <span className="gradient-text font-bold">videos</span> — powered by the world's best models.
+              Deploy intelligent AI chatbots for customer support, sales, data analysis, lead management and more. No coding required.
             </p>
           </motion.div>
             </div>
@@ -326,34 +335,16 @@ const CreateAgentSection = () => {
           <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.4 }} className="mt-20 max-w-7xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div className="space-y-8">
-                <h3 className="text-5xl md:text-6xl font-bold text-foreground leading-tight tracking-tight">Automate 80%+ of interactions with AI agents</h3>
-                <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">AEKO AI agents resolve complex issues on any channel. Powered by agentic AI, they reason, adapt, and act independently – delighting customers and employees while reducing costs at scale.</p>
+                <h2 className="text-5xl md:text-6xl font-bold text-foreground leading-tight tracking-tight">The Best AI Customer Support Agent for Any Business — Deploy in Minutes</h2>
+                <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">AKOBOT's custom AI agent builder deploys intelligent chatbots across WhatsApp, Telegram, Slack, Discord, and major channels without code.<br /><br />Create AI customer support, AI sales, and AI booking agents powered by GPT4, Claude, Sarvam that learn from your business data and improve every conversation.</p>
                 <div className="flex flex-wrap gap-4">
                   <Button variant="default" size="lg" className="bg-green-500 hover:bg-green-600 text-white font-semibold px-8 py-6 text-base rounded-xl shadow-lg">Contact Sales</Button>
                 </div>
               </div>
 
-              {/* Optimized Image Interface Demo for Akobot AI */}
-              <div className="relative group">
-                {/* Outer Glow Effect */}
-                <motion.div
-                  className="absolute -inset-4 rounded-3xl blur-2xl"
-                  animate={{
-                    background: [
-                      'radial-gradient(circle, rgba(34, 197, 94, 0.3), rgba(16, 185, 129, 0.2), transparent)',
-                      'radial-gradient(circle, rgba(16, 185, 129, 0.3), rgba(34, 197, 94, 0.2), transparent)',
-                      'radial-gradient(circle, rgba(34, 197, 94, 0.3), rgba(16, 185, 129, 0.2), transparent)',
-                    ],
-                  }}
-                  transition={{
-                    duration: 4,
-                    repeat: Infinity,
-                    ease: 'easeInOut',
-                  }}
-                />
-                
-                <div className="relative rounded-3xl p-3 sm:p-2 overflow-hidden shadow-2xl" style={{ borderRadius: '24px' }}>
-                  {/* Animated Border */}
+              {/* Video Interface Demo */}
+              <div className="relative">
+                <div className="relative rounded-3xl p-4 sm:p-2 overflow-hidden shadow-2xl" style={{ borderRadius: '24px' }}>
                   <motion.div
                     className="absolute inset-0 rounded-3xl pointer-events-none"
                     style={{
@@ -367,67 +358,26 @@ const CreateAgentSection = () => {
                     animate={{ backgroundPosition: ['0% 0%', '100% 100%', '0% 0%'] }}
                     transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
                   />
-                  <div className="absolute inset-[2px] rounded-3xl bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-100 dark:to-emerald-100" style={{ borderRadius: '22px' }} />
-                  
-                  <div className="relative rounded-2xl overflow-hidden shadow-xl aspect-[1.5/1] flex flex-col bg-gray-900" style={{ borderRadius: '16px' }}>
-                    {/* Visual Asset with Ken Burns Effect */}
-                    <motion.img 
-                      src="/feeds/home_page.webp" 
-                      alt="Akobot AI - Multi-Flow Intelligence Core"
-                      initial={{ scale: 1.15 }}
-                      animate={{ scale: 1 }}
-                      transition={{ duration: 10, ease: "linear", repeat: Infinity, repeatType: "reverse" }}
-                      className="absolute inset-0 w-full h-full object-cover z-0"
+                  <div className="absolute inset-[2px] rounded-3xl bg-gradient-to-br from-green-100 to-emerald-100" style={{ borderRadius: '22px' }} />
+                  <div className="relative rounded-2xl overflow-hidden shadow-xl aspect-[21/9] sm:aspect-[1.5/1] flex flex-col bg-gray-900" style={{ borderRadius: '16px' }}>
+                    <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover z-0 opacity-100">
+                      <source src="/feeds/video19.mp4" type="video/mp4" />
+                    </video>
+                    <motion.div
+                      className="absolute inset-0 rounded-2xl pointer-events-none z-10"
+                      style={{
+                        padding: '2px',
+                        background: 'linear-gradient(135deg, #4B5563, #6B7280, #9CA3AF, #6B7280, #4B5563)',
+                        backgroundSize: '200% 200%',
+                        WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                        WebkitMaskComposite: 'xor',
+                        maskComposite: 'exclude',
+                      }}
+                      animate={{ backgroundPosition: ['0% 0%', '100% 100%', '0% 0%'] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
                     />
-                    
-                    {/* Gradient Overlays for Depth */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/30 z-10" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent z-10" />
-                    <div className="absolute inset-0 bg-gradient-to-b from-green-500/5 via-transparent to-transparent z-10" />
-                    
-                    {/* Interactive Overlay */}
-                    <div className="absolute inset-0 pointer-events-none z-20 shadow-[inset_0_0_80px_rgba(0,0,0,0.3)]" />
-                    
-                    {/* Floating Particles Effect */}
-                    <div className="absolute inset-0 z-15 pointer-events-none overflow-hidden">
-                      {[...Array(5)].map((_, i) => (
-                        <motion.div
-                          key={i}
-                          className="absolute w-1 h-1 bg-green-400/40 rounded-full"
-                          initial={{ 
-                            x: Math.random() * 100 + "%", 
-                            y: Math.random() * 100 + "%",
-                            opacity: 0 
-                          }}
-                          animate={{ 
-                            y: [null, "-100%"],
-                            opacity: [0, 0.8, 0]
-                          }}
-                          transition={{ 
-                            duration: 6 + Math.random() * 4, 
-                            repeat: Infinity, 
-                            delay: Math.random() * 4,
-                            ease: "linear"
-                          }}
-                        />
-                      ))}
-                    </div>
-                    
-                    {/* Corner Accents */}
-                    <div className="absolute top-4 left-4 w-16 h-16 border-l-2 border-t-2 border-white/30 rounded-tl-lg z-20" />
-                    <div className="absolute top-4 right-4 w-16 h-16 border-r-2 border-t-2 border-white/30 rounded-tr-lg z-20" />
-                    <div className="absolute bottom-4 left-4 w-16 h-16 border-l-2 border-b-2 border-white/30 rounded-bl-lg z-20" />
-                    <div className="absolute bottom-4 right-4 w-16 h-16 border-r-2 border-b-2 border-white/30 rounded-br-lg z-20" />
+                    <div className="absolute inset-0 pointer-events-none z-20 shadow-[inset_0_0_100px_rgba(0,0,0,0.2)]" />
                   </div>
-                </div>
-                
-                {/* Reflection Effect */}
-                <div className="absolute -bottom-20 left-1/2 -translate-x-1/2 w-[90%] h-20 blur-xl opacity-30">
-                  <img 
-                    src="/feeds/home_page.webp" 
-                    alt=""
-                    className="w-full h-full object-cover scale-y-[-1] opacity-50"
-                  />
                 </div>
               </div>
             </div>

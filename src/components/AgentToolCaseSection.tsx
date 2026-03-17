@@ -178,7 +178,7 @@ const AgentToolCaseSection = () => {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-[2.5rem] md:text-5xl lg:text-6xl font-black tracking-tighter leading-tight text-foreground mb-2">
-              Agent Tool <span className="agent-gradient-text">Showcase</span>
+              AI Agents Tool <span className="agent-gradient-text">Showcase</span>
             </h2>
             <p className="mt-1 text-base font-light text-muted-foreground max-w-2xl hidden md:block">
               Explore powerful AI agents designed to automate and enhance your workflows.

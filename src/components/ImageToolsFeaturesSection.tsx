@@ -4,13 +4,13 @@ import { motion } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 
 const imageModels = [
-  { id: 1, title: "Text2Image", description: "Generate stunning images from text prompts using advanced AI models.", image: "/feeds/image1.jpg" },
-  { id: 2, title: "Image2Image", description: "Transform and modify existing images with AI-powered conversion.", image: "/feeds/image2.jpg" },
-  { id: 3, title: "Background Removal", description: "Instantly remove backgrounds from images with precision and accuracy.", image: "/feeds/image3.png" },
-  { id: 4, title: "Avatar Generation", description: "Create unique AI-generated avatars and profile pictures in various styles.", image: "/feeds/image4.jpg" },
-  { id: 5, title: "Upscale", description: "Enhance image resolution and quality with AI-powered upscaling.", image: "/feeds/image5.jpg" },
-  { id: 6, title: "Object Removal", description: "Remove unwanted elements from images seamlessly with AI filling.", image: "/feeds/image6.jpg" },
-  { id: 7, title: "Content Creation", description: "Create engaging visual content for social media and marketing.", image: "/feeds/image7.jpg" },
+  { id: 1, title: "Text to Image AI", description: "Generate stunning images from any text prompt using Flux AI, Midjourney, Stable Diffusion, DALL-E and more.", image: "/feeds/image1.jpg" },
+  { id: 2, title: "Image to Image AI", description: "Transform and stylize existing images using AI-powered image-to-image conversion.", image: "/feeds/image2.jpg" },
+  { id: 3, title: "AI Background Remover", description: "Instantly remove or replace image backgrounds with one click — no design skills needed.", image: "/feeds/image3.png" },
+  { id: 4, title: "AI Avatar Generator", description: "Create unique AI-generated avatars and professional profile pictures in any style.", image: "/feeds/image4.jpg" },
+  { id: 5, title: "AI Image Upscaler", description: "Upscale and enhance low-resolution images to 4K quality using AI upscaling technology.", image: "/feeds/image5.jpg" },
+  { id: 6, title: "AI Object Remover", description: "Remove unwanted objects, people, or watermarks from any image seamlessly with AI.", image: "/feeds/image6.jpg" },
+  { id: 7, title: "AI Content Creator", description: "Generate ready-to-use visual content for social media, ads, and marketing campaigns.", image: "/feeds/image7.jpg" },
 ];
 
 const ImageToolsFeaturesSection = () => {
@@ -65,10 +65,10 @@ const ImageToolsFeaturesSection = () => {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-[2.5rem] md:text-5xl lg:text-6xl font-black tracking-tighter leading-tight text-foreground mb-2">
-              Image Tool <span className="purple-gradient-text">Showcase</span>
+              AI Image <span className="purple-gradient-text">Showcase</span>
             </h2>
             <p className="mt-1 text-base font-light text-muted-foreground max-w-2xl hidden md:block">
-              Discover how cutting-edge AI transforms your creative workflow.
+              From text to image AI and background removal to AI upscaling and avatar generation — every tool you need in one place.
             </p>
           </motion.div>
         </div>

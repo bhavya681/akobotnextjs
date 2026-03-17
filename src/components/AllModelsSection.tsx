@@ -124,7 +124,7 @@ const AllModelsSection = () => {
           </motion.div>
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground dark:text-white mb-4 tracking-tight leading-tight">
             <span className="bg-gradient-to-r from-foreground via-purple-600 to-pink-600 dark:from-white dark:via-purple-200 dark:to-pink-200 bg-clip-text text-transparent">
-              ALL the Great AI Video & Image Models
+              ALL the Great AI Video &amp; Image Models
             </span>
             <br />
             <span className="text-foreground dark:text-white">in ONE Place!</span>
@@ -136,9 +136,7 @@ const AllModelsSection = () => {
             viewport={{ once: true }}
             transition={{ delay: 0.3 }}
           >
-            <Zap className="w-5 h-5 text-yellow-400" />
-            <span className="text-muted-foreground text-lg">Powered by cutting-edge AI technology</span>
-            <Zap className="w-5 h-5 text-yellow-400" />
+            <p className="text-muted-foreground text-lg max-w-3xl text-center">Powered by cutting-edge AI technology</p>
           </motion.div>
         </motion.div>
 
